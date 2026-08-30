@@ -1,4 +1,5 @@
 mod backups;
+mod settings;
 
 use macroquad::{
     color,

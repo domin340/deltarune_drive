@@ -226,6 +226,7 @@ dependencies = [
  "macroquad",
  "serde",
  "serde_json",
+ "steam_deltarune",
  "zip",
 ]
 

@@ -17,7 +17,7 @@ pub enum DeltarunePathError {
 /// finds the appropriate deltarune path by:
 ///     - the operating system
 ///     - possible steam local data directory paths for the dedicated operating system
-pub fn deltarune_path() -> Result<PathBuf, DeltarunePathError> {
+pub fn local_data_dir() -> Result<PathBuf, DeltarunePathError> {
     #[inline]
     fn if_is_dir(path: PathBuf) -> Result<PathBuf, DeltarunePathError> {
         if path.is_dir() {

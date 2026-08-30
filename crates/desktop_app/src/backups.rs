@@ -1,7 +1,9 @@
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 pub type Date = chrono::DateTime<Utc>;
 
+#[derive(Deserialize, Serialize)]
 pub struct RegisteredBkp {
     pub name: String,
     pub desc: String,
@@ -26,6 +28,7 @@ impl Default for RegisteredBkp {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum Bkp {
     Registered(RegisteredBkp),
     /// Backups not listed inside `settings.toml` but listed in the backups directory

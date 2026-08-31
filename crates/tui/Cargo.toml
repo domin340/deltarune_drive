@@ -1,0 +1,13 @@
+[package]
+name = "tui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { version = "0.4.45", features = ["serde"] }
+dirs = "6.0.0"
+serde_json = "1.0.151"
+serde = { version = "1.0.229", features = ["derive"] }
+zip = "8.6.0"
+ratatui = "0.30.2"
+crossterm = "0.29.0"

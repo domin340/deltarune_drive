@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 pub type Date = chrono::DateTime<Utc>;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisteredBkp {
     pub name: String,
     pub desc: String,
@@ -28,11 +28,23 @@ impl Default for RegisteredBkp {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+/// Backups not listed inside `settings.toml` but listed in the backups directory
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UnregisteredBkp {
+    pub name: String,
+}
+
+impl From<UnregisteredBkp> for RegisteredBkp {
+    fn from(value: UnregisteredBkp) -> Self {
+        Self {
+            name: value.name,
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Bkp {
     Registered(RegisteredBkp),
-    /// Backups not listed inside `settings.toml` but listed in the backups directory
-    Unregistered {
-        name: String,
-    },
+    Unregistered(UnregisteredBkp),
 }

@@ -4,7 +4,7 @@ mod my_widgets;
 
 use crate::{
     conf::Conf,
-    my_widgets::button::{Button, ButtonState, EqPad},
+    my_widgets::button::{Button, ButtonState},
 };
 use crossterm::event::{self, KeyCode};
 use ratatui::{

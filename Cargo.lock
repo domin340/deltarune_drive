@@ -1822,6 +1822,7 @@ dependencies = [
  "ratatui",
  "serde",
  "serde_json",
+ "steam_deltarune",
  "zip",
 ]
 

@@ -11,3 +11,4 @@ serde = { version = "1.0.229", features = ["derive"] }
 zip = "8.6.0"
 ratatui = "0.30.2"
 crossterm = "0.29.0"
+steam_deltarune = { version = "0.1.0", path = "../steam_deltarune" }

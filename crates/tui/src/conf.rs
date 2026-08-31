@@ -5,6 +5,7 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
+use steam_deltarune::DeltarunePathError;
 
 pub const DATA_DIR_SUF: &str = "deltarune_drive_settings";
 pub const CONF_FILE: &str = "settings.json";
@@ -14,6 +15,24 @@ pub enum DeltarunePath {
     Steam(PathBuf),
     Custom(PathBuf),
     None,
+}
+
+impl DeltarunePath {
+    /// detects the deltarune steam path.
+    ///
+    /// ### Panics
+    /// - when os is not macos, windows or linux
+    /// - when home dir is not available
+    pub fn detect() -> Self {
+        match steam_deltarune::local_data_dir() {
+            Ok(path) => Self::Steam(path),
+            Err(DeltarunePathError::DeltaruneNotPresent) => Self::None,
+            Err(DeltarunePathError::OsNotSupported | DeltarunePathError::HomeDirNotPresent) => {
+                // no way to valiably find the deltarune steam path for other operating systems
+                panic!("Application only supports 'Windows' 'MacOS' and 'Linux'!");
+            }
+        }
+    }
 }
 
 pub fn default_app_path() -> PathBuf {

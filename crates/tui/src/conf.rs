@@ -42,7 +42,7 @@ impl Conf {
         }
     }
 
-    pub fn save(&self) -> Result<(), SaveSettingsError> {
+    pub fn save(&self) -> Result<(), ConfFileError> {
         self.ensure_initialized()?;
 
         let json = serde_json::to_string_pretty(self)?;
@@ -54,7 +54,7 @@ impl Conf {
             .truncate(true)
             .open(conf_path)?
             .write_all(json.as_bytes())
-            .map_err(SaveSettingsError::Io)
+            .map_err(ConfFileError::Io)
     }
 }
 
@@ -69,18 +69,18 @@ impl Default for Conf {
 }
 
 #[derive(Debug)]
-pub enum SaveSettingsError {
+pub enum ConfFileError {
     Io(io::Error),
     Json(serde_json::Error),
 }
 
-impl From<io::Error> for SaveSettingsError {
+impl From<io::Error> for ConfFileError {
     fn from(value: io::Error) -> Self {
         Self::Io(value)
     }
 }
 
-impl From<serde_json::Error> for SaveSettingsError {
+impl From<serde_json::Error> for ConfFileError {
     fn from(value: serde_json::Error) -> Self {
         Self::Json(value)
     }

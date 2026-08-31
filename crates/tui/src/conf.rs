@@ -11,8 +11,9 @@ pub const CONF_FILE: &str = "settings.json";
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DeltarunePath {
-    Steam,
+    Steam(PathBuf),
     Custom(PathBuf),
+    None,
 }
 
 pub fn default_app_path() -> PathBuf {
@@ -46,12 +47,12 @@ impl Conf {
 
         let json = serde_json::to_string_pretty(self)?;
 
-        let settings_file = self.app_path.join(CONF_FILE);
+        let conf_path = self.app_path.join(CONF_FILE);
         fs::OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
-            .open(settings_file)?
+            .open(conf_path)?
             .write_all(json.as_bytes())
             .map_err(SaveSettingsError::Io)
     }
@@ -61,7 +62,7 @@ impl Default for Conf {
     fn default() -> Self {
         Self {
             app_path: default_app_path(),
-            deltarune_path: DeltarunePath::Steam,
+            deltarune_path: DeltarunePath::None,
             bkps: vec![],
         }
     }

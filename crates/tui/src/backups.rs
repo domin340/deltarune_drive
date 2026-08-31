@@ -12,8 +12,11 @@ pub struct RegisteredBkp {
 }
 
 impl RegisteredBkp {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn with_name(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            ..Default::default()
+        }
     }
 }
 
@@ -36,10 +39,7 @@ pub struct UnregisteredBkp {
 
 impl From<UnregisteredBkp> for RegisteredBkp {
     fn from(value: UnregisteredBkp) -> Self {
-        Self {
-            name: value.name,
-            ..Default::default()
-        }
+        Self::with_name(value.name)
     }
 }
 

@@ -93,7 +93,7 @@ impl Default for Conf {
     fn default() -> Self {
         Self {
             app_path: default_app_path(),
-            deltarune_path: DeltarunePath::None,
+            deltarune_path: DeltarunePath::detect(),
             bkps: vec![],
         }
     }

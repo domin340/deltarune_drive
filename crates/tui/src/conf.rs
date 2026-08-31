@@ -25,11 +25,23 @@ pub fn default_app_path() -> PathBuf {
 #[derive(Serialize, Deserialize)]
 pub struct Conf {
     pub deltarune_path: DeltarunePath,
+    #[serde(skip_serializing)]
     pub app_path: PathBuf,
     pub bkps: Vec<Bkp>,
 }
 
 impl Conf {
+    pub fn try_load() -> Result<Self, ConfFileError> {
+        let app_path = default_app_path();
+        let file = fs::OpenOptions::new()
+            .read(true)
+            .open(app_path.join(CONF_FILE))?;
+
+        let mut conf: Conf = serde_json::from_reader(file).map_err(ConfFileError::Json)?;
+        conf.app_path = app_path;
+        Ok(conf)
+    }
+
     fn is_app_path_dir(&self) -> bool {
         self.app_path.is_dir()
     }

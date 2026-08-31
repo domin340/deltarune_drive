@@ -33,6 +33,6 @@ pub enum Bkp {
     Registered(RegisteredBkp),
     /// Backups not listed inside `settings.toml` but listed in the backups directory
     Unregistered {
-        path: String,
+        name: String,
     },
 }

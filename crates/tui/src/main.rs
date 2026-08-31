@@ -1,12 +1,17 @@
 mod backups;
 mod conf;
+mod my_widgets;
 
-use crate::conf::Conf;
+use crate::{
+    conf::Conf,
+    my_widgets::button::{Button, ButtonState, EqPad},
+};
 use crossterm::event::{self, KeyCode};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Layout},
     style::Style,
+    text::Line,
     widgets::Block,
 };
 use std::io;
@@ -71,7 +76,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
 }
 
 fn draw_ui(state: &mut State, frame: &mut Frame) {
-    let [explorer, right_panel] =
+    let [explorer_area, right_panel_area] =
         Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
             .areas(frame.area());
 
@@ -84,6 +89,16 @@ fn draw_ui(state: &mut State, frame: &mut Frame) {
         block
     };
 
+    let [explorer_list_area, explorer_new_button_area] =
+        Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(explorer_area);
+
+    frame.render_stateful_widget(
+        // here make the button secondary (find colors for the theme)
+        Button::new(Line::from("New").centered()),
+        explorer_new_button_area,
+        &mut ButtonState::default(),
+    );
+
     let right_panel_block = {
         let mut block = Block::bordered().title("Display");
         if state.focus.is_right_panel() {
@@ -93,8 +108,8 @@ fn draw_ui(state: &mut State, frame: &mut Frame) {
         block
     };
 
-    frame.render_widget(explorer_block, explorer);
-    frame.render_widget(right_panel_block, right_panel);
+    frame.render_widget(explorer_block, explorer_list_area);
+    frame.render_widget(right_panel_block, right_panel_area);
 }
 
 mod styles {

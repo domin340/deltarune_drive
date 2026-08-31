@@ -116,3 +116,15 @@ impl From<serde_json::Error> for ConfFileError {
         Self::Json(value)
     }
 }
+
+/// returns an iterator to listable files that looks like backups:
+/// - is a file
+/// - has "zip" extension
+pub fn enlistable_bkp_files() -> io::Result<impl Iterator<Item = std::fs::DirEntry>> {
+    std::fs::read_dir(default_app_path()).map(|dir| {
+        dir.into_iter().filter_map(|e| e.ok()).filter(|e| {
+            let path = e.path();
+            path.is_file() && path.extension().is_some_and(|s| s == "zip")
+        })
+    })
+}

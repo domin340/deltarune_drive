@@ -36,10 +36,18 @@ pub struct ButtonState {
     pub action: ButtonAction,
 }
 
+#[derive(Default, Debug, PartialEq, Eq)]
+pub enum ButtonStyle {
+    Ghost,
+    #[default]
+    Secondary,
+}
+
 pub struct Button<'a> {
     press: Option<Style>,
     focus: Option<Style>,
     normal: Option<Style>,
+    style: ButtonStyle,
     padding: EqPad,
     line: Line<'a>,
 }
@@ -50,6 +58,7 @@ impl Default for Button<'_> {
             press: None,
             focus: None,
             normal: None,
+            style: ButtonStyle::default(),
             line: "".into(),
             padding: EqPad::from(1),
         }

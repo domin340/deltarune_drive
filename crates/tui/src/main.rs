@@ -113,7 +113,7 @@ impl State {
             // here make the button secondary (find colors for the theme)
             Button::new(Line::from("New").centered()),
             explorer_new_button_area,
-            &mut ButtonState::default().set_action(ButtonAction::Focus),
+            &mut ButtonState::default(),
         );
     }
 }

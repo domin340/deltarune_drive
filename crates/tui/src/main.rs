@@ -16,6 +16,33 @@ use ratatui::{
 };
 use std::io;
 
+fn main() -> io::Result<()> {
+    ratatui::run(run_app)?;
+    Ok(())
+}
+
+fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
+    let state = State {
+        // conf: Conf::try_load().unwrap_or_default(),
+        // temporary line
+        conf: Conf::default(),
+        focus: Focus::Explorer(ExplorerItemFocus(0)),
+    };
+
+    'run_app: loop {
+        term.draw(|frame| state.ui(frame))?;
+
+        if let Some(key) = event::read()?.as_key_press_event() {
+            match key.code {
+                KeyCode::Char('q') => break 'run_app,
+                _ => {}
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct ExplorerItemFocus(usize);
 
@@ -46,33 +73,6 @@ struct State {
     /// stores all the backups and handles the IO inside the local data directory.
     conf: Conf,
     focus: Focus,
-}
-
-fn main() -> io::Result<()> {
-    ratatui::run(run_app)?;
-    Ok(())
-}
-
-fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let state = State {
-        // conf: Conf::try_load().unwrap_or_default(),
-        // temporary line
-        conf: Conf::default(),
-        focus: Focus::Explorer(ExplorerItemFocus(0)),
-    };
-
-    'run_app: loop {
-        term.draw(|frame| state.ui(frame))?;
-
-        if let Some(key) = event::read()?.as_key_press_event() {
-            match key.code {
-                KeyCode::Char('q') => break 'run_app,
-                _ => {}
-            }
-        }
-    }
-
-    Ok(())
 }
 
 impl State {

@@ -54,7 +54,7 @@ fn main() -> io::Result<()> {
 }
 
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let mut state = State {
+    let state = State {
         // conf: Conf::try_load().unwrap_or_default(),
         // temporary line
         conf: Conf::default(),
@@ -62,7 +62,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
     };
 
     'run_app: loop {
-        term.draw(|frame| draw_ui(&mut state, frame))?;
+        term.draw(|frame| state.ui(frame))?;
 
         if let Some(key) = event::read()?.as_key_press_event() {
             match key.code {
@@ -75,43 +75,45 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
     Ok(())
 }
 
-fn draw_ui(state: &mut State, frame: &mut Frame) {
-    let [explorer_area, right_panel_area] =
-        Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
-            .areas(frame.area());
+impl State {
+    fn ui(&self, frame: &mut Frame) {
+        let [explorer_area, right_panel_area] =
+            Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
+                .areas(frame.area());
 
-    let explorer_block = {
-        let mut block = Block::bordered().title("Explorer");
-        if state.focus.is_explorer() {
-            block = block.border_style(Style::default().fg(Color::Blue));
-        }
+        let explorer_block = {
+            let mut block = Block::bordered().title("Explorer");
+            if self.focus.is_explorer() {
+                block = block.border_style(Style::default().fg(Color::Blue));
+            }
 
-        block
-    };
+            block
+        };
 
-    render_bkp_list(state, frame, explorer_block.inner(explorer_area));
+        self.bkp_list(frame, explorer_block.inner(explorer_area));
 
-    let right_panel_block = {
-        let mut block = Block::bordered().title("Display");
-        if state.focus.is_right_panel() {
-            block = block.border_style(Style::default().fg(Color::Blue));
-        }
+        let right_panel_block = {
+            let mut block = Block::bordered().title("Display");
+            if self.focus.is_right_panel() {
+                block = block.border_style(Style::default().fg(Color::Blue));
+            }
 
-        block
-    };
+            block
+        };
 
-    frame.render_widget(explorer_block, explorer_area);
-    frame.render_widget(right_panel_block, right_panel_area);
-}
+        frame.render_widget(explorer_block, explorer_area);
+        frame.render_widget(right_panel_block, right_panel_area);
+    }
 
-fn render_bkp_list(state: &mut State, frame: &mut Frame, area: Rect) {
-    let [explorer_list_area, explorer_new_button_area] =
-        Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(area);
+    fn bkp_list(&self, frame: &mut Frame, area: Rect) {
+        let [explorer_list_area, explorer_new_button_area] =
+            Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(area);
 
-    frame.render_stateful_widget(
-        // here make the button secondary (find colors for the theme)
-        Button::new(Line::from("New").centered()),
-        explorer_new_button_area,
-        &mut ButtonState::default().set_action(ButtonAction::Focus),
-    );
+        frame.render_stateful_widget(
+            // here make the button secondary (find colors for the theme)
+            Button::new(Line::from("New").centered()),
+            explorer_new_button_area,
+            &mut ButtonState::default().set_action(ButtonAction::Focus),
+        );
+    }
 }

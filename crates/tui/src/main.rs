@@ -4,7 +4,7 @@ mod my_widgets;
 
 use crate::{
     conf::Conf,
-    my_widgets::button::{Button, ButtonState},
+    my_widgets::button::{Button, ButtonAction, ButtonState},
 };
 use crossterm::event::{self, KeyCode};
 use ratatui::{
@@ -96,7 +96,7 @@ fn draw_ui(state: &mut State, frame: &mut Frame) {
         // here make the button secondary (find colors for the theme)
         Button::new(Line::from("New").centered()),
         explorer_new_button_area,
-        &mut ButtonState::default(),
+        &mut ButtonState::default().set_action(ButtonAction::Focus),
     );
 
     let right_panel_block = {

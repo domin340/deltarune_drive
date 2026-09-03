@@ -9,8 +9,8 @@ use crate::{
 use crossterm::event::{self, KeyCode};
 use ratatui::{
     DefaultTerminal, Frame,
-    layout::{Constraint, Layout},
-    style::Style,
+    layout::{Constraint, Layout, Rect},
+    style::{Color, Style},
     text::Line,
     widgets::Block,
 };
@@ -83,14 +83,30 @@ fn draw_ui(state: &mut State, frame: &mut Frame) {
     let explorer_block = {
         let mut block = Block::bordered().title("Explorer");
         if state.focus.is_explorer() {
-            block = block.border_style(Style::default().fg(styles::FOCUS_COLOR));
+            block = block.border_style(Style::default().fg(Color::Blue));
         }
 
         block
     };
 
+    render_bkp_list(state, frame, explorer_block.inner(explorer_area));
+
+    let right_panel_block = {
+        let mut block = Block::bordered().title("Display");
+        if state.focus.is_right_panel() {
+            block = block.border_style(Style::default().fg(Color::Blue));
+        }
+
+        block
+    };
+
+    frame.render_widget(explorer_block, explorer_area);
+    frame.render_widget(right_panel_block, right_panel_area);
+}
+
+fn render_bkp_list(state: &mut State, frame: &mut Frame, area: Rect) {
     let [explorer_list_area, explorer_new_button_area] =
-        Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(explorer_area);
+        Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(area);
 
     frame.render_stateful_widget(
         // here make the button secondary (find colors for the theme)
@@ -98,22 +114,4 @@ fn draw_ui(state: &mut State, frame: &mut Frame) {
         explorer_new_button_area,
         &mut ButtonState::default().set_action(ButtonAction::Focus),
     );
-
-    let right_panel_block = {
-        let mut block = Block::bordered().title("Display");
-        if state.focus.is_right_panel() {
-            block = block.border_style(Style::default().fg(styles::FOCUS_COLOR));
-        }
-
-        block
-    };
-
-    frame.render_widget(explorer_block, explorer_list_area);
-    frame.render_widget(right_panel_block, right_panel_area);
-}
-
-mod styles {
-    use ratatui::style::Color;
-
-    pub const FOCUS_COLOR: Color = Color::Blue;
 }

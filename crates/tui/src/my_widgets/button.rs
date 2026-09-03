@@ -68,12 +68,12 @@ impl StatefulWidget for Button<'_> {
     type State = ButtonState;
 
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State) {
-        let button_rect = Rect::new(
-            area.x, // start positions
-            area.y,
-            area.width,
-            self.padding.y * 2 + 1,
-        );
+        // let button_rect = Rect::new(
+        //     area.x, // start positions
+        //     area.y,
+        //     area.width,
+        //     self.padding.y * 2 + 1,
+        // );
 
         let text_rect = Rect::new(area.x, area.y + self.padding.y, area.width, 1);
         self.line.render(text_rect, buf);

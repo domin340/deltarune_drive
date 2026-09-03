@@ -1,5 +1,6 @@
 use ratatui::{
     prelude::Rect,
+    style::{Modifier, Style},
     text::Line,
     widgets::{StatefulWidget, Widget},
 };
@@ -33,6 +34,13 @@ pub enum ButtonAction {
 #[derive(Default)]
 pub struct ButtonState {
     pub action: ButtonAction,
+}
+
+impl ButtonState {
+    pub fn set_action(mut self, action: ButtonAction) -> Self {
+        self.action = action;
+        self
+    }
 }
 
 pub struct Button<'a> {

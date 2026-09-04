@@ -15,7 +15,8 @@ fn main() -> io::Result<()> {
 }
 
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let mut state = State::from_conf(extend_bkps_with_fakes(Conf::default()));
+    let conf = extend_bkps_with_fakes(Conf::default());
+    let mut state = State::from_conf(conf);
 
     'run_app: loop {
         term.draw(|frame| state.ui(frame))?;

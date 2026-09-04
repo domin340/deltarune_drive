@@ -42,7 +42,6 @@ pub enum ButtonAction {
     #[default]
     None,
     Focus,
-    Press,
 }
 
 #[derive(Default)]
@@ -105,7 +104,6 @@ impl StatefulWidget for Button<'_> {
         let (border, bg, fg) = match state.action {
             ButtonAction::None => (Color::DarkGray, Color::Reset, Color::Gray),
             ButtonAction::Focus => (Color::Gray, Color::DarkGray, Color::White),
-            ButtonAction::Press => (Color::White, Color::Gray, Color::Black),
         };
 
         let base_style = Style::default().fg(fg).bg(bg);

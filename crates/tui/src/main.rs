@@ -15,13 +15,7 @@ fn main() -> io::Result<()> {
 }
 
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let mut state = State {
-        // conf: Conf::try_load().unwrap_or_default(),
-        // temporary line
-        conf: extend_bkps_with_fakes(Conf::default()),
-        focus: Focus::default(),
-        list_item: None,
-    };
+    let mut state = State::from_conf(extend_bkps_with_fakes(Conf::default()));
 
     'run_app: loop {
         term.draw(|frame| state.ui(frame))?;

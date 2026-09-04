@@ -37,21 +37,14 @@ impl From<u16> for EqPad {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ButtonAction {
-    #[default]
-    None,
-    Focus,
-}
-
 #[derive(Default)]
 pub struct ButtonState {
-    pub action: ButtonAction,
+    pub focused: bool,
 }
 
 impl ButtonState {
-    pub fn set_action(mut self, action: ButtonAction) -> Self {
-        self.action = action;
+    pub fn set_focused(mut self, focused: bool) -> Self {
+        self.focused = focused;
         self
     }
 }
@@ -101,9 +94,10 @@ impl StatefulWidget for Button<'_> {
             bottom_right,
         } = CornerIndices::from(area);
 
-        let (border, bg, fg) = match state.action {
-            ButtonAction::None => (Color::DarkGray, Color::Reset, Color::Gray),
-            ButtonAction::Focus => (Color::Gray, Color::DarkGray, Color::White),
+        let (border, bg, fg) = if state.focused {
+            (Color::Gray, Color::DarkGray, Color::White)
+        } else {
+            (Color::Reset, Color::Reset, Color::Reset)
         };
 
         let base_style = Style::default().fg(fg).bg(bg);

@@ -4,17 +4,14 @@ use crossterm::event::KeyCode;
 pub struct ExplorerListItem(pub usize);
 
 impl ExplorerListItem {
-    #[inline]
     pub fn idx(self) -> usize {
         self.0
     }
 
-    #[inline]
     pub fn next(self) -> ExplorerListItem {
         self.idx().saturating_add(1).into()
     }
 
-    #[inline]
     pub fn prev(self) -> ExplorerListItem {
         self.idx().saturating_sub(1).into()
     }
@@ -60,20 +57,22 @@ pub enum Focus {
 pub struct FocusManager {
     focus: Focus,
     list_item: Option<ExplorerListItem>,
+    list_max_idx: Option<usize>,
 }
 
 impl FocusManager {
-    #[inline]
+    pub fn set_list_max_idx(&mut self, max: Option<usize>) {
+        self.list_max_idx = max;
+    }
+
     pub fn focus(&self) -> &Focus {
         &self.focus
     }
 
-    #[inline]
     pub fn list_item(&self) -> Option<ExplorerListItem> {
         self.list_item
     }
 
-    #[inline]
     pub fn list_item_idx(&self) -> Option<usize> {
         self.list_item().map(|item| item.idx())
     }
@@ -118,7 +117,12 @@ impl FocusManager {
                         }
                     }
                     UiAction::Down => {
-                        self.list_item = Some(self.list_item.unwrap().next());
+                        let item = self.list_item.unwrap();
+                        self.list_item = Some(if let Some(list_max_idx) = self.list_max_idx {
+                            item.next().min(list_max_idx.into()) // clamp the idx
+                        } else {
+                            item.next()
+                        });
                         Focus::Explorer(ExplorerFocus::List)
                     }
                     UiAction::Tab => Focus::Explorer(ExplorerFocus::NewButton),

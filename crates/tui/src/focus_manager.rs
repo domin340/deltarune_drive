@@ -83,7 +83,7 @@ impl FocusManager {
         self.focus = match focus {
             Focus::None => match action {
                 UiAction::Left | UiAction::Enter | UiAction::Tab => {
-                    Focus::Explorer(ExplorerFocus::NewButton)
+                    Focus::Explorer(ExplorerFocus::None)
                 }
                 UiAction::Right => Focus::BkpPage(BkpPageFocus::NameInput),
                 _ => Focus::None,
@@ -93,6 +93,7 @@ impl FocusManager {
                     UiAction::Tab | UiAction::Enter | UiAction::Down => {
                         Focus::Explorer(ExplorerFocus::NewButton)
                     }
+                    UiAction::Right => Focus::BkpPage(BkpPageFocus::NameInput),
                     UiAction::Escape => Focus::None,
                     _ => Focus::Explorer(focus), // do nothing
                 },
@@ -101,7 +102,7 @@ impl FocusManager {
                         self.list_item = Some(0.into());
                         Focus::Explorer(ExplorerFocus::List)
                     }
-                    UiAction::Escape | UiAction::Up => Focus::None,
+                    UiAction::Escape => Focus::None,
                     UiAction::Enter => todo!(), // enter popup
                     _ => Focus::Explorer(ExplorerFocus::NewButton),
                 },
@@ -128,29 +129,34 @@ impl FocusManager {
             },
             Focus::BkpPage(focus) => match focus {
                 BkpPageFocus::NameInput => match action {
+                    UiAction::Left => Focus::Explorer(ExplorerFocus::None),
                     UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::DescInput),
                     UiAction::Escape => Focus::None,
                     _ => Focus::BkpPage(BkpPageFocus::NameInput),
                 },
                 BkpPageFocus::DescInput => match action {
+                    UiAction::Left => Focus::Explorer(ExplorerFocus::None),
                     UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::CreatedField),
                     UiAction::Up => Focus::BkpPage(BkpPageFocus::NameInput),
                     UiAction::Escape => Focus::None,
                     _ => Focus::BkpPage(BkpPageFocus::DescInput),
                 },
                 BkpPageFocus::CreatedField => match action {
+                    UiAction::Left => Focus::Explorer(ExplorerFocus::None),
                     UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::UpdatedField),
                     UiAction::Up => Focus::BkpPage(BkpPageFocus::DescInput),
                     UiAction::Escape => Focus::None,
                     _ => Focus::BkpPage(BkpPageFocus::CreatedField),
                 },
                 BkpPageFocus::UpdatedField => match action {
+                    UiAction::Left => Focus::Explorer(ExplorerFocus::None),
                     UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::DuplicateButton),
                     UiAction::Up => Focus::BkpPage(BkpPageFocus::CreatedField),
                     UiAction::Escape => Focus::None,
                     _ => Focus::BkpPage(BkpPageFocus::UpdatedField),
                 },
                 BkpPageFocus::DuplicateButton => match action {
+                    UiAction::Left => Focus::Explorer(ExplorerFocus::None),
                     UiAction::Right | UiAction::Tab => Focus::BkpPage(BkpPageFocus::ReplaceButton),
                     UiAction::Up => Focus::BkpPage(BkpPageFocus::UpdatedField),
                     UiAction::Escape => Focus::None,

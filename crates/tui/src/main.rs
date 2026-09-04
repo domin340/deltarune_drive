@@ -82,6 +82,7 @@ impl State {
             Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
                 .areas(frame.area());
 
+        // == handle explorer here ==
         let explorer_block = {
             let mut block = Block::bordered().title("Explorer");
             if self.focus.is_explorer() {
@@ -103,6 +104,7 @@ impl State {
         );
         frame.render_widget(explorer_block, explorer_area);
 
+        // == handle right panel here ==
         let right_panel_block = {
             let mut block = Block::bordered().title("Display");
             if self.focus.is_right_panel() {

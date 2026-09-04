@@ -8,6 +8,22 @@ impl ExplorerListItem {
     pub fn idx(self) -> usize {
         self.0
     }
+
+    #[inline]
+    pub fn next(self) -> ExplorerListItem {
+        self.idx().saturating_add(1).into()
+    }
+
+    #[inline]
+    pub fn prev(self) -> ExplorerListItem {
+        self.idx().saturating_sub(1).into()
+    }
+}
+
+impl From<usize> for ExplorerListItem {
+    fn from(value: usize) -> Self {
+        Self(value)
+    }
 }
 
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -15,7 +31,7 @@ pub enum ExplorerFocus {
     /// Nothing inside explorer block is selected.
     #[default]
     None,
-    List(ExplorerListItem),
+    List,
     NewButton,
 }
 
@@ -42,11 +58,108 @@ pub enum Focus {
 
 pub struct FocusManager {
     focus: Focus,
+    list_item: Option<ExplorerListItem>,
 }
 
 impl FocusManager {
     pub fn focus(&self) -> &Focus {
         &self.focus
+    }
+
+    pub fn exec(&mut self, action: UiAction) {
+        let focus = std::mem::take(&mut self.focus);
+        self.focus = match focus {
+            Focus::None => match action {
+                UiAction::Left | UiAction::Enter | UiAction::Tab => {
+                    Focus::Explorer(ExplorerFocus::NewButton)
+                }
+                UiAction::Right => Focus::BkpPage(BkpPageFocus::NameInput),
+                _ => Focus::None,
+            },
+            Focus::Explorer(focus) => match focus {
+                ExplorerFocus::None => match action {
+                    UiAction::Tab | UiAction::Enter | UiAction::Down => {
+                        Focus::Explorer(ExplorerFocus::NewButton)
+                    }
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::Explorer(focus), // do nothing
+                },
+                ExplorerFocus::NewButton => match action {
+                    UiAction::Down | UiAction::Tab => {
+                        self.list_item = Some(0.into());
+                        Focus::Explorer(ExplorerFocus::List)
+                    }
+                    UiAction::Escape | UiAction::Up => Focus::None,
+                    UiAction::Enter => todo!(), // enter popup
+                    _ => Focus::Explorer(ExplorerFocus::NewButton),
+                },
+                ExplorerFocus::List => match action {
+                    UiAction::Up => {
+                        let item = self.list_item.unwrap();
+                        if item.idx() == 0 {
+                            // new button is above it
+                            Focus::Explorer(ExplorerFocus::NewButton)
+                        } else {
+                            self.list_item = Some(item.prev());
+                            Focus::Explorer(ExplorerFocus::List)
+                        }
+                    }
+                    UiAction::Down => {
+                        self.list_item = Some(self.list_item.unwrap().next());
+                        Focus::Explorer(ExplorerFocus::List)
+                    }
+                    UiAction::Tab => Focus::Explorer(ExplorerFocus::NewButton),
+                    UiAction::Enter => Focus::BkpPage(BkpPageFocus::NameInput),
+                    UiAction::Escape => Focus::Explorer(ExplorerFocus::None),
+                    _ => Focus::Explorer(ExplorerFocus::List),
+                },
+            },
+            Focus::BkpPage(focus) => match focus {
+                BkpPageFocus::NameInput => match action {
+                    UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::DescInput),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::NameInput),
+                },
+                BkpPageFocus::DescInput => match action {
+                    UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::CreatedField),
+                    UiAction::Up => Focus::BkpPage(BkpPageFocus::NameInput),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::DescInput),
+                },
+                BkpPageFocus::CreatedField => match action {
+                    UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::UpdatedField),
+                    UiAction::Up => Focus::BkpPage(BkpPageFocus::DescInput),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::CreatedField),
+                },
+                BkpPageFocus::UpdatedField => match action {
+                    UiAction::Down | UiAction::Tab => Focus::BkpPage(BkpPageFocus::DuplicateButton),
+                    UiAction::Up => Focus::BkpPage(BkpPageFocus::CreatedField),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::UpdatedField),
+                },
+                BkpPageFocus::DuplicateButton => match action {
+                    UiAction::Right | UiAction::Tab => Focus::BkpPage(BkpPageFocus::ReplaceButton),
+                    UiAction::Up => Focus::BkpPage(BkpPageFocus::UpdatedField),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::DuplicateButton),
+                },
+                BkpPageFocus::ReplaceButton => match action {
+                    UiAction::Left => Focus::BkpPage(BkpPageFocus::DuplicateButton),
+                    UiAction::Right | UiAction::Tab => Focus::BkpPage(BkpPageFocus::DeleteButton),
+                    UiAction::Up => Focus::BkpPage(BkpPageFocus::UpdatedField),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::ReplaceButton),
+                },
+                BkpPageFocus::DeleteButton => match action {
+                    UiAction::Left => Focus::BkpPage(BkpPageFocus::ReplaceButton),
+                    UiAction::Tab => Focus::BkpPage(BkpPageFocus::NameInput),
+                    UiAction::Up => Focus::BkpPage(BkpPageFocus::UpdatedField),
+                    UiAction::Escape => Focus::None,
+                    _ => Focus::BkpPage(BkpPageFocus::DeleteButton),
+                },
+            },
+        };
     }
 }
 

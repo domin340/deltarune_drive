@@ -1,3 +1,5 @@
+use crossterm::event::KeyCode;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ExplorerListItem(pub usize);
 
@@ -45,5 +47,31 @@ pub struct FocusManager {
 impl FocusManager {
     pub fn focus(&self) -> &Focus {
         &self.focus
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum UiAction {
+    Right,
+    Left,
+    Up,
+    Down,
+    Enter,
+    Escape,
+    Tab,
+}
+
+impl UiAction {
+    pub fn parse(code: KeyCode) -> Option<Self> {
+        match code {
+            KeyCode::Right => Some(UiAction::Right),
+            KeyCode::Left => Some(UiAction::Left),
+            KeyCode::Up => Some(UiAction::Up),
+            KeyCode::Down => Some(UiAction::Down),
+            KeyCode::Enter => Some(UiAction::Enter),
+            KeyCode::Esc => Some(UiAction::Escape),
+            KeyCode::Tab => Some(UiAction::Tab),
+            _ => None,
+        }
     }
 }

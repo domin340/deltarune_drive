@@ -52,6 +52,16 @@ pub enum Bkp {
     Unregistered(UnregisteredBkp),
 }
 
+impl Bkp {
+    #[inline]
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Registered(bkp) => &bkp.name,
+            Self::Unregistered(bkp) => &bkp.name,
+        }
+    }
+}
+
 /// returns an iterator to listable files that looks like backups:
 /// - is a file
 /// - has "zip" extension

@@ -62,8 +62,19 @@ pub struct FocusManager {
 }
 
 impl FocusManager {
+    #[inline]
     pub fn focus(&self) -> &Focus {
         &self.focus
+    }
+
+    #[inline]
+    pub fn list_item(&self) -> Option<ExplorerListItem> {
+        self.list_item
+    }
+
+    #[inline]
+    pub fn list_item_idx(&self) -> Option<usize> {
+        self.list_item().map(|item| item.idx())
     }
 
     pub fn exec(&mut self, action: UiAction) {

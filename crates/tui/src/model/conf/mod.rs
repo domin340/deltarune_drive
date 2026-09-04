@@ -1,4 +1,7 @@
-use crate::backups::{Bkp, RegisteredBkp, UnregisteredBkp};
+mod bkps;
+
+pub use bkps::{Bkp, Date as BkpDate, RegisteredBkp, UnregisteredBkp, enlistable_bkp_files};
+
 use chrono::{TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -60,6 +63,10 @@ impl Conf {
         let mut conf: Conf = serde_json::from_reader(file).map_err(ConfFileError::Json)?;
         conf.app_path = app_path;
         Ok(conf)
+    }
+
+    pub fn bkps(&self) -> &[Bkp] {
+        &self.bkps
     }
 
     fn is_app_path_dir(&self) -> bool {

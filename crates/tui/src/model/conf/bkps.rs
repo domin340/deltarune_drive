@@ -1,8 +1,8 @@
-use crate::conf::default_app_path;
-
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::io;
+
+use crate::model::conf::default_app_path;
 
 pub type Date = chrono::DateTime<Utc>;
 

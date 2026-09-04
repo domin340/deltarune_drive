@@ -1,10 +1,8 @@
-mod backups;
-mod conf;
 mod model;
 mod my_widgets;
 
 use crate::{
-    conf::{Conf, extend_bkps_with_fakes},
+    model::conf::{Conf, extend_bkps_with_fakes},
     model::state::{Focus, State, UiAction},
 };
 use crossterm::event::{self, KeyCode};

@@ -1,7 +1,7 @@
 mod manage_focus;
 mod render;
 
-use crate::conf::Conf;
+use crate::model::conf::Conf;
 pub use manage_focus::{BkpPageFocus, ExplorerFocus, ExplorerListItem, Focus, UiAction};
 
 pub struct State {

@@ -1,5 +1,5 @@
 use crate::{
-    backups::Bkp,
+    model::conf::Bkp,
     model::state::{Focus, State},
     my_widgets::button::{Button, ButtonState},
 };

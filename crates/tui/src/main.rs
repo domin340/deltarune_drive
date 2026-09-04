@@ -101,7 +101,6 @@ impl State {
             explorer_new_button_area,
             &mut ButtonState::default(),
         );
-
         frame.render_widget(explorer_block, explorer_area);
 
         let right_panel_block = {

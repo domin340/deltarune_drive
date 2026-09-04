@@ -56,6 +56,7 @@ pub enum Focus {
     BkpPage(BkpPageFocus),
 }
 
+#[derive(Default)]
 pub struct FocusManager {
     focus: Focus,
     list_item: Option<ExplorerListItem>,

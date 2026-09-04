@@ -1,15 +1,16 @@
 mod backups;
 mod conf;
+mod focus_manager;
 mod my_widgets;
 
 use crate::{
     conf::Conf,
-    my_widgets::button::{Button, ButtonAction, ButtonState},
+    my_widgets::button::{Button, ButtonState},
 };
 use crossterm::event::{self, KeyCode};
 use ratatui::{
     DefaultTerminal, Frame,
-    layout::{Constraint, Layout, Rect},
+    layout::{Constraint, Layout},
     style::{Color, Style},
     text::Line,
     widgets::Block,
@@ -90,7 +91,18 @@ impl State {
             block
         };
 
-        self.bkp_list(frame, explorer_block.inner(explorer_area));
+        let [explorer_new_button_area, explorer_list_area] =
+            Layout::vertical([Constraint::Length(3), Constraint::Fill(1)])
+                .areas(explorer_block.inner(explorer_area));
+
+        frame.render_stateful_widget(
+            // here make the button secondary (find colors for the theme)
+            Button::new(Line::from("New").centered()),
+            explorer_new_button_area,
+            &mut ButtonState::default(),
+        );
+
+        frame.render_widget(explorer_block, explorer_area);
 
         let right_panel_block = {
             let mut block = Block::bordered().title("Display");
@@ -101,19 +113,6 @@ impl State {
             block
         };
 
-        frame.render_widget(explorer_block, explorer_area);
         frame.render_widget(right_panel_block, right_panel_area);
-    }
-
-    fn bkp_list(&self, frame: &mut Frame, area: Rect) {
-        let [explorer_list_area, explorer_new_button_area] =
-            Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(area);
-
-        frame.render_stateful_widget(
-            // here make the button secondary (find colors for the theme)
-            Button::new(Line::from("New").centered()),
-            explorer_new_button_area,
-            &mut ButtonState::default(),
-        );
     }
 }

@@ -4,7 +4,7 @@ mod focus_manager;
 mod my_widgets;
 
 use crate::{
-    conf::Conf,
+    conf::{Conf, extend_bkps_with_fakes},
     my_widgets::button::{Button, ButtonState},
 };
 use crossterm::event::{self, KeyCode};
@@ -26,7 +26,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
     let state = State {
         // conf: Conf::try_load().unwrap_or_default(),
         // temporary line
-        conf: Conf::default(),
+        conf: extend_bkps_with_fakes(Conf::default()),
         focus: Focus::Explorer(ExplorerItemFocus(0)),
     };
 

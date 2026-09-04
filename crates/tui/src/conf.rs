@@ -1,4 +1,5 @@
-use crate::backups::Bkp;
+use crate::backups::{Bkp, RegisteredBkp, UnregisteredBkp};
+use chrono::{TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -97,6 +98,29 @@ impl Default for Conf {
             bkps: vec![],
         }
     }
+}
+
+/// Extends the bkps list with fake bkps (used for debugging)
+pub fn extend_bkps_with_fakes(mut conf: Conf) -> Conf {
+    conf.bkps.extend(vec![
+        Bkp::Registered(RegisteredBkp {
+            name: String::from("weird_route"),
+            desc: String::from("up to chapter 5"),
+            creation_date: Utc::now() - TimeDelta::hours(5),
+            update_date: None,
+        }),
+        Bkp::Unregistered(UnregisteredBkp {
+            name: String::from("imported_bkp"),
+        }),
+        Bkp::Registered(RegisteredBkp {
+            name: String::from("pacifist_route"),
+            desc: String::from(""),
+            creation_date: Utc::now() - TimeDelta::days(2),
+            update_date: Some(Utc::now() - TimeDelta::hours(8)),
+        }),
+    ]);
+
+    conf
 }
 
 #[derive(Debug)]

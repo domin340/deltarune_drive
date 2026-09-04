@@ -25,7 +25,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
                 KeyCode::Char('q') => break 'run_app,
                 _ => {
                     if let Some(ui_action) = UiAction::parse(key.code) {
-                        state.exec(ui_action);
+                        state.exec_ui_action(ui_action);
                     }
                 }
             }

@@ -71,7 +71,7 @@ impl State {
         self.conf.bkps().len().saturating_sub(1)
     }
 
-    pub fn exec(&mut self, action: UiAction) {
+    pub fn exec_ui_action(&mut self, action: UiAction) {
         let focus = std::mem::take(&mut self.focus);
         self.focus = match focus {
             Focus::None => match action {

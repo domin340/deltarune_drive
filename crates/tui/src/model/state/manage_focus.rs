@@ -1,3 +1,4 @@
+use crate::model::state::State;
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -53,18 +54,7 @@ pub enum Focus {
     BkpPage(BkpPageFocus),
 }
 
-#[derive(Default)]
-pub struct FocusManager {
-    focus: Focus,
-    list_item: Option<ExplorerListItem>,
-    list_max_idx: Option<usize>,
-}
-
-impl FocusManager {
-    pub fn set_list_max_idx(&mut self, max: Option<usize>) {
-        self.list_max_idx = max;
-    }
-
+impl State {
     pub fn focus(&self) -> &Focus {
         &self.focus
     }
@@ -75,6 +65,10 @@ impl FocusManager {
 
     pub fn list_item_idx(&self) -> Option<usize> {
         self.list_item().map(|item| item.idx())
+    }
+
+    fn list_max_idx(&self) -> usize {
+        self.conf.bkps().len().saturating_sub(1)
     }
 
     pub fn exec(&mut self, action: UiAction) {
@@ -109,7 +103,7 @@ impl FocusManager {
                     UiAction::Up => {
                         let item = self.list_item.unwrap();
                         if item.idx() == 0 {
-                            // new button is above it
+                            self.list_item = None;
                             Focus::Explorer(ExplorerFocus::NewButton)
                         } else {
                             self.list_item = Some(item.prev());
@@ -117,12 +111,8 @@ impl FocusManager {
                         }
                     }
                     UiAction::Down => {
-                        let item = self.list_item.unwrap();
-                        self.list_item = Some(if let Some(list_max_idx) = self.list_max_idx {
-                            item.next().min(list_max_idx.into()) // clamp the idx
-                        } else {
-                            item.next()
-                        });
+                        let next_item = self.list_item().unwrap().next();
+                        self.list_item = Some(next_item.min(self.list_max_idx().into()));
                         Focus::Explorer(ExplorerFocus::List)
                     }
                     UiAction::Tab => Focus::Explorer(ExplorerFocus::NewButton),

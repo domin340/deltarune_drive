@@ -14,9 +14,20 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+fn create_conf() -> Conf {
+    #[cfg(not(debug_assertions))]
+    {
+        Conf::try_load().unwrap_or_default()
+    }
+
+    #[cfg(debug_assertions)]
+    {
+        extend_bkps_with_fakes(Conf::default())
+    }
+}
+
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let conf = extend_bkps_with_fakes(Conf::default());
-    let mut state = State::from_conf(conf);
+    let mut state = State::from_conf(create_conf());
 
     'run_app: loop {
         term.draw(|frame| state.ui(frame))?;

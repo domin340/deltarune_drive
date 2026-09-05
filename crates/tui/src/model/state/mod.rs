@@ -9,6 +9,8 @@ pub struct State {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
     pub focus: Focus,
+    /// NOTE: can be set by [`State::exec_ui_action`] usually by pressing enter
+    pub editing: bool,
     pub list_item: Option<ExplorerListItem>,
 }
 

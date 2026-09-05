@@ -18,7 +18,7 @@ impl State {
 
     pub fn focus_on_explorer(&self) -> bool {
         match self.focus {
-            Focus::Explorer | Focus::ExplorerNew | Focus::ExplorerList => true,
+            Focus::ExplorerNew | Focus::ExplorerList => true,
             _ => false,
         }
     }

@@ -14,6 +14,27 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
+    let mut state = create_state();
+
+    'run_app: loop {
+        term.draw(|frame| state.ui(frame))?;
+
+        if let Some(key) = event::read()?.as_key_press_event() {
+            match key.code {
+                KeyCode::Char('q') => break 'run_app,
+                _ => {
+                    if let Some(ui_action) = UiAction::parse(key.code) {
+                        state.exec_ui_action(ui_action);
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn create_conf() -> Conf {
     #[cfg(not(debug_assertions))]
     {
@@ -41,25 +62,4 @@ fn create_state() -> State {
     };
 
     state
-}
-
-fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let mut state = create_state();
-
-    'run_app: loop {
-        term.draw(|frame| state.ui(frame))?;
-
-        if let Some(key) = event::read()?.as_key_press_event() {
-            match key.code {
-                KeyCode::Char('q') => break 'run_app,
-                _ => {
-                    if let Some(ui_action) = UiAction::parse(key.code) {
-                        state.exec_ui_action(ui_action);
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(())
 }

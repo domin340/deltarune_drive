@@ -52,11 +52,7 @@ impl State {
             block
         };
 
-        let [
-            explorer_new_button_area,
-            explorer_list_label,
-            explorer_list_area,
-        ] = Layout::vertical([
+        let [explorer_new_button_area, _, explorer_list_area] = Layout::vertical([
             Constraint::Length(3),
             Constraint::Length(1),
             Constraint::Fill(1),
@@ -70,7 +66,7 @@ impl State {
             explorer_new_button_area,
             &mut ButtonState::default().set_focused(self.focus_on(Focus::ExplorerNew)),
         );
-        frame.render_widget(Line::from("[BACKUP LIST]").centered(), explorer_list_label);
+
         self.bkp_list(explorer_list_area, frame);
 
         // == handle right panel here ==

@@ -12,12 +12,29 @@ use ratatui::{
 };
 
 impl State {
-    fn is_explorer_focused(&self) -> bool {
-        matches!(self.focus, Focus::Explorer(_))
+    pub fn focus_on(&self, focus: Focus) -> bool {
+        self.focus == focus
     }
 
-    fn is_bkp_page_focused(&self) -> bool {
-        matches!(self.focus, Focus::BkpPage(_))
+    pub fn focus_on_explorer(&self) -> bool {
+        match self.focus {
+            Focus::Explorer | Focus::ExplorerNew | Focus::ExplorerList => true,
+            _ => false,
+        }
+    }
+
+    pub fn focus_on_bkp(&self) -> bool {
+        match self.focus {
+            Focus::BkpName
+            | Focus::BkpDesc
+            | Focus::BkpCreated
+            | Focus::BkpUpdated
+            | Focus::BkpDuplicate
+            | Focus::BkpReplace
+            | Focus::BkpDelete
+            | Focus::BkpLoad => true,
+            _ => false,
+        }
     }
 
     pub fn ui(&self, frame: &mut Frame) {
@@ -28,7 +45,7 @@ impl State {
         // == handle explorer here ==
         let explorer_block = {
             let mut block = Block::bordered().title("Explorer (LEFT)");
-            if self.is_explorer_focused() {
+            if self.focus_on_explorer() {
                 block = block.border_style(Style::default().fg(Color::Blue));
             }
 
@@ -59,7 +76,7 @@ impl State {
         // == handle right panel here ==
         let bkp_page_block = {
             let mut block = Block::bordered().title("Display (RIGHT)");
-            if self.is_bkp_page_focused() {
+            if self.focus_on_bkp() {
                 block = block.border_style(Style::default().fg(Color::Blue));
             }
 

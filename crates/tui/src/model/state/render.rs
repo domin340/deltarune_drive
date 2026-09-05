@@ -12,18 +12,18 @@ use ratatui::{
 };
 
 impl State {
-    pub fn focus_on(&self, focus: Focus) -> bool {
+    pub fn is_focus(&self, focus: Focus) -> bool {
         self.focus == focus
     }
 
-    pub fn focus_on_explorer(&self) -> bool {
+    pub fn is_focus_explorer(&self) -> bool {
         match self.focus {
             Focus::ExplorerNew | Focus::ExplorerList => true,
             _ => false,
         }
     }
 
-    pub fn focus_on_bkp(&self) -> bool {
+    pub fn is_focus_bkp(&self) -> bool {
         match self.focus {
             Focus::BkpName
             | Focus::BkpDesc
@@ -45,7 +45,7 @@ impl State {
         // == handle explorer here ==
         let explorer_block = {
             let mut block = Block::bordered().title("Explorer (LEFT)");
-            if self.focus_on_explorer() {
+            if self.is_focus_explorer() {
                 block = block.border_style(Style::default().fg(Color::Blue));
             }
 
@@ -64,7 +64,7 @@ impl State {
             // here make the button secondary (find colors for the theme)
             Button::new(Line::from("New").centered()),
             explorer_new_button_area,
-            &mut ButtonState::default().set_focused(self.focus_on(Focus::ExplorerNew)),
+            &mut ButtonState::default().set_focused(self.is_focus(Focus::ExplorerNew)),
         );
 
         self.bkp_list(explorer_list_area, frame);
@@ -72,7 +72,7 @@ impl State {
         // == handle right panel here ==
         let bkp_page_block = {
             let mut block = Block::bordered().title("Display (RIGHT)");
-            if self.focus_on_bkp() {
+            if self.is_focus_bkp() {
                 block = block.border_style(Style::default().fg(Color::Blue));
             }
 

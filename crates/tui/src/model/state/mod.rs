@@ -21,4 +21,9 @@ impl State {
             ..Default::default()
         }
     }
+
+    /// Returns [`true`] when bkps list is emtpy
+    pub fn bkps_empty(&self) -> bool {
+        self.conf.bkps().len() == 0
+    }
 }

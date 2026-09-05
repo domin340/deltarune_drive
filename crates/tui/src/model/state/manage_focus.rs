@@ -27,8 +27,6 @@ impl From<usize> for ExplorerListItem {
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Focus {
     #[default]
-    None,
-    Explorer,
     ExplorerList,
     ExplorerNew,
     BkpName,
@@ -52,107 +50,106 @@ impl State {
 
     pub fn exec_ui_action(&mut self, action: UiAction) {
         self.focus = match self.focus {
-            Focus::None => match action {
-                UiAction::Left | UiAction::Enter | UiAction::Tab => Focus::Explorer,
-                UiAction::Right => Focus::BkpName,
-                _ => Focus::None,
-            },
-            Focus::Explorer => match action {
-                UiAction::Tab | UiAction::Enter | UiAction::Down => {
-                    self.list_item = Some(0.into());
-                    Focus::ExplorerList
-                }
-                UiAction::Right => Focus::BkpName,
-                UiAction::Escape => Focus::None,
-                _ => Focus::Explorer,
-            },
             Focus::ExplorerNew => match action {
-                UiAction::Up => {
+                UiAction::Up if !self.bkps_empty() => {
                     self.list_item = Some(self.list_max_idx().into());
                     Focus::ExplorerList // item above the new button
                 }
-                UiAction::Tab => {
+                UiAction::Tab | UiAction::Down if !self.bkps_empty() => {
                     self.list_item = Some(0.into());
                     Focus::ExplorerList // beginning of the list
                 }
-                UiAction::Escape => Focus::None,
                 UiAction::Enter => todo!(), // enter popup
                 _ => Focus::ExplorerNew,
             },
             Focus::ExplorerList => match action {
                 UiAction::Up => {
-                    self.list_item = Some(self.list_item.unwrap().prev());
-                    Focus::ExplorerList
-                }
-                UiAction::Down => {
-                    let item = self.list_item.unwrap();
-                    let max_idx = self.list_max_idx();
-                    if item.idx() == max_idx {
-                        self.list_item = None;
-                        Focus::ExplorerNew
+                    if let Some(item) = self.list_item {
+                        if item.idx() == 0 {
+                            self.list_item = None;
+                            Focus::ExplorerNew
+                        } else {
+                            self.list_item = Some(item.prev());
+                            Focus::ExplorerList
+                        }
                     } else {
-                        self.list_item = Some(item.next().min(max_idx.into()));
-                        Focus::ExplorerList
+                        Focus::ExplorerNew
                     }
                 }
-                UiAction::Tab => Focus::ExplorerNew,
+                UiAction::Down => {
+                    if let Some(item) = self.list_item {
+                        let max_idx = self.list_max_idx();
+                        if item.idx() == max_idx {
+                            self.list_item = None;
+                            Focus::ExplorerNew
+                        } else {
+                            self.list_item = Some(item.next().min(max_idx.into()));
+                            Focus::ExplorerList
+                        }
+                    } else {
+                        Focus::ExplorerNew
+                    }
+                }
                 UiAction::Enter | UiAction::Right => Focus::BkpName,
-                UiAction::Escape => Focus::Explorer,
+                UiAction::Tab => {
+                    self.list_item = None;
+                    Focus::ExplorerNew
+                }
                 _ => Focus::ExplorerList,
             },
             Focus::BkpName => match action {
                 UiAction::Left => Focus::ExplorerList,
                 UiAction::Down | UiAction::Tab => Focus::BkpDesc,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpName,
             },
             Focus::BkpDesc => match action {
                 UiAction::Left => Focus::ExplorerList,
                 UiAction::Down | UiAction::Tab => Focus::BkpCreated,
                 UiAction::Up => Focus::BkpName,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpDesc,
             },
             Focus::BkpCreated => match action {
                 UiAction::Left => Focus::ExplorerList,
                 UiAction::Down | UiAction::Tab => Focus::BkpUpdated,
                 UiAction::Up => Focus::BkpDesc,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpCreated,
             },
             Focus::BkpUpdated => match action {
                 UiAction::Left => Focus::ExplorerList,
                 UiAction::Down | UiAction::Tab => Focus::BkpDuplicate,
                 UiAction::Up => Focus::BkpCreated,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpUpdated,
             },
             Focus::BkpDuplicate => match action {
                 UiAction::Left => Focus::ExplorerList,
                 UiAction::Right | UiAction::Tab => Focus::BkpReplace,
                 UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpDuplicate,
             },
             Focus::BkpReplace => match action {
                 UiAction::Left => Focus::BkpDuplicate,
                 UiAction::Right | UiAction::Tab => Focus::BkpDelete,
                 UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpReplace,
             },
             Focus::BkpDelete => match action {
                 UiAction::Left => Focus::BkpReplace,
                 UiAction::Right | UiAction::Tab => Focus::BkpLoad,
                 UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpDelete,
             },
             Focus::BkpLoad => match action {
                 UiAction::Left => Focus::BkpDelete,
                 UiAction::Tab => Focus::BkpName,
                 UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::None,
+                UiAction::Escape => Focus::ExplorerList,
                 _ => Focus::BkpLoad,
             },
         };

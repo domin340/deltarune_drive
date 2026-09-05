@@ -6,7 +6,7 @@ use crate::{
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::Line,
     widgets::{Block, List, ListState},
 };
@@ -83,8 +83,9 @@ impl State {
     }
 
     fn bkp_list(&self, area: Rect, frame: &mut Frame) {
+        let highlight_style = Style::default().bg(Color::DarkGray).fg(Color::White);
         frame.render_stateful_widget(
-            List::new(self.bkp_names()).highlight_style(Modifier::REVERSED),
+            List::new(self.bkp_names()).highlight_style(highlight_style),
             area,
             &mut ListState::default().with_selected(self.list_item_idx()),
         );

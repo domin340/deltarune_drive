@@ -68,7 +68,7 @@ impl State {
             // here make the button secondary (find colors for the theme)
             Button::new(Line::from("New").centered()),
             explorer_new_button_area,
-            &mut ButtonState::default(),
+            &mut ButtonState::default().set_focused(self.focus_on(Focus::ExplorerNew)),
         );
         frame.render_widget(Line::from("[BACKUP LIST]").centered(), explorer_list_label);
         self.bkp_list(explorer_list_area, frame);

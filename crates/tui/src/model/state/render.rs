@@ -52,10 +52,10 @@ impl State {
             block
         };
 
-        let [explorer_new_button_area, _, explorer_list_area] = Layout::vertical([
-            Constraint::Length(3),
-            Constraint::Length(1),
+        let [explorer_list_area, _, explorer_new_button_area] = Layout::vertical([
             Constraint::Fill(1),
+            Constraint::Length(1),
+            Constraint::Length(3),
         ])
         .areas(explorer_block.inner(explorer_area));
 

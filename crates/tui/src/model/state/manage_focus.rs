@@ -58,15 +58,22 @@ impl State {
                 _ => Focus::None,
             },
             Focus::Explorer => match action {
-                UiAction::Tab | UiAction::Enter | UiAction::Down => Focus::ExplorerNew,
+                UiAction::Tab | UiAction::Enter | UiAction::Down => {
+                    self.list_item = Some(0.into());
+                    Focus::ExplorerList
+                }
                 UiAction::Right => Focus::BkpName,
                 UiAction::Escape => Focus::None,
                 _ => Focus::Explorer,
             },
             Focus::ExplorerNew => match action {
-                UiAction::Down | UiAction::Tab => {
+                UiAction::Up => {
+                    self.list_item = Some(self.list_max_idx().into());
+                    Focus::ExplorerList // item above the new button
+                }
+                UiAction::Tab => {
                     self.list_item = Some(0.into());
-                    Focus::ExplorerList
+                    Focus::ExplorerList // beginning of the list
                 }
                 UiAction::Escape => Focus::None,
                 UiAction::Enter => todo!(), // enter popup
@@ -74,19 +81,19 @@ impl State {
             },
             Focus::ExplorerList => match action {
                 UiAction::Up => {
+                    self.list_item = Some(self.list_item.unwrap().prev());
+                    Focus::ExplorerList
+                }
+                UiAction::Down => {
                     let item = self.list_item.unwrap();
-                    if item.idx() == 0 {
+                    let max_idx = self.list_max_idx();
+                    if item.idx() == max_idx {
                         self.list_item = None;
                         Focus::ExplorerNew
                     } else {
-                        self.list_item = Some(item.prev());
+                        self.list_item = Some(item.next().min(max_idx.into()));
                         Focus::ExplorerList
                     }
-                }
-                UiAction::Down => {
-                    let next_item = self.list_item.unwrap().next();
-                    self.list_item = Some(next_item.min(self.list_max_idx().into()));
-                    Focus::ExplorerList
                 }
                 UiAction::Tab => Focus::ExplorerNew,
                 UiAction::Enter => Focus::BkpName,

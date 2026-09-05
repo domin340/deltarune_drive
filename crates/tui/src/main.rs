@@ -26,8 +26,23 @@ fn create_conf() -> Conf {
     }
 }
 
+fn create_state() -> State {
+    let conf = create_conf();
+    let mut state = State::from_conf(conf);
+
+    if state.bkps_empty() {
+        state.list_item = None;
+        state.focus = Focus::ExplorerNew
+    } else {
+        state.list_item = Some(0.into());
+        state.focus = Focus::ExplorerList
+    };
+
+    state
+}
+
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let mut state = State::from_conf(create_conf());
+    let mut state = create_state();
 
     'run_app: loop {
         term.draw(|frame| state.ui(frame))?;

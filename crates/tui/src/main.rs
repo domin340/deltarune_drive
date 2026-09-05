@@ -17,6 +17,8 @@ fn main() -> io::Result<()> {
 fn create_conf() -> Conf {
     #[cfg(not(debug_assertions))]
     {
+        // try loading saved conf from local data directory if found,
+        // otherwise create a new one
         Conf::try_load().unwrap_or_default()
     }
 

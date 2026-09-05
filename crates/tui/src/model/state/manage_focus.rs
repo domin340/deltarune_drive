@@ -96,7 +96,7 @@ impl State {
                     }
                 }
                 UiAction::Tab => Focus::ExplorerNew,
-                UiAction::Enter => Focus::BkpName,
+                UiAction::Enter | UiAction::Right => Focus::BkpName,
                 UiAction::Escape => Focus::Explorer,
                 _ => Focus::ExplorerList,
             },

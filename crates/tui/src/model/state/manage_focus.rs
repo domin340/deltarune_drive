@@ -42,16 +42,8 @@ pub enum Focus {
 }
 
 impl State {
-    pub fn focus(&self) -> &Focus {
-        &self.focus
-    }
-
-    pub fn list_item(&self) -> Option<ExplorerListItem> {
-        self.list_item
-    }
-
     pub fn list_item_idx(&self) -> Option<usize> {
-        self.list_item().map(|item| item.idx())
+        self.list_item.map(|item| item.idx())
     }
 
     fn list_max_idx(&self) -> usize {
@@ -92,7 +84,7 @@ impl State {
                     }
                 }
                 UiAction::Down => {
-                    let next_item = self.list_item().unwrap().next();
+                    let next_item = self.list_item.unwrap().next();
                     self.list_item = Some(next_item.min(self.list_max_idx().into()));
                     Focus::ExplorerList
                 }

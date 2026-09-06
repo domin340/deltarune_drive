@@ -1,6 +1,7 @@
 use ratatui::layout::{Position, Rect};
 
 pub mod button;
+pub mod input_field;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CornerIndices {

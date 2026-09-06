@@ -1,5 +1,10 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use ratatui::{layout::Position, text::Text};
+use ratatui::{
+    layout::{Position, Rect},
+    style::Modifier,
+    text::Text,
+    widgets::{Block, StatefulWidget, Widget},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum InputAction {
@@ -39,20 +44,56 @@ pub struct InputFieldState {
     pub local_cursor: Position,
 }
 
-pub struct InputField<T>
-where
-    for<'text> T: Into<Text<'text>>,
-{
-    pub text: T,
+#[derive(Debug)]
+pub struct InputField<'block, 'text> {
+    pub text: Text<'text>,
+    pub block: Option<Block<'block>>,
     pub show_cursor: bool,
 }
 
-// pub struct InputField<T: for<'a> Into<Text<'a>>> {
-//     text: T,
-// }
+impl<'block, 'text> InputField<'block, 'text> {
+    pub fn new(text: impl Into<Text<'text>>) -> Self {
+        Self {
+            text: text.into(),
+            block: None,
+            show_cursor: true,
+        }
+    }
 
-// impl<T: for<'a> Into<Text<'a>>> InputField<T> {
-//     pub fn new(text: T) -> Self {
-//         Self { text }
-//     }
-// }
+    pub fn show_cursor(mut self, show: bool) -> Self {
+        self.show_cursor = show;
+        self
+    }
+
+    pub fn block(mut self, block: Block<'block>) -> Self {
+        self.block = Some(block);
+        self
+    }
+}
+
+impl<'block, 'text> StatefulWidget for InputField<'block, 'text> {
+    type State = InputFieldState;
+
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State) {
+        let text_area = if let Some(block) = self.block {
+            let inner = block.inner(area);
+            block.render(area, buf);
+            inner
+        } else {
+            area
+        };
+
+        if self.show_cursor {
+            let term_cursor_pos = (
+                text_area.x + state.local_cursor.x,
+                text_area.y + state.local_cursor.y,
+            );
+
+            // create cursor
+            buf.cell_mut(term_cursor_pos)
+                .map(|cell| cell.modifier = Modifier::REVERSED);
+        }
+
+        self.text.render(text_area, buf);
+    }
+}

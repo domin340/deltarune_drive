@@ -20,9 +20,9 @@ pub enum InputAction {
 }
 
 impl InputAction {
-    pub fn parse(code: KeyCode, modifiers: KeyModifiers) -> Option<InputAction> {
-        match code {
-            key if modifiers.is_empty() => match key {
+    pub fn parse_event(e: KeyEvent) -> Option<InputAction> {
+        match e.code {
+            key if e.modifiers.is_empty() => match key {
                 KeyCode::Backspace => Some(InputAction::DeleteChar),
                 KeyCode::Enter => Some(InputAction::Enter),
                 KeyCode::Esc => Some(InputAction::Escape),
@@ -31,7 +31,7 @@ impl InputAction {
                 KeyCode::Char(c) => Some(InputAction::Insert(c)),
                 _ => None,
             },
-            KeyCode::Char('v') if modifiers.contains(KeyModifiers::CONTROL) => {
+            KeyCode::Char('v') if e.modifiers.contains(KeyModifiers::CONTROL) => {
                 Some(InputAction::PasteClipboard)
             }
             _ => None,

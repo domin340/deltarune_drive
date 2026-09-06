@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::{Position, Rect},
     style::Modifier,
@@ -14,26 +14,22 @@ pub enum InputAction {
     MoveDown,
     Insert(char),
     DeleteChar,
-    PasteClipboard,
     Escape,
     Enter,
 }
 
 impl InputAction {
     pub fn parse_event(e: KeyEvent) -> Option<InputAction> {
+        if !e.modifiers.is_empty() {
+            return None;
+        }
+
         match e.code {
-            key if e.modifiers.is_empty() => match key {
-                KeyCode::Backspace => Some(InputAction::DeleteChar),
-                KeyCode::Enter => Some(InputAction::Enter),
-                KeyCode::Esc => Some(InputAction::Escape),
-                KeyCode::Left => Some(InputAction::MoveLeft),
-                KeyCode::Right => Some(InputAction::MoveRight),
-                KeyCode::Char(c) => Some(InputAction::Insert(c)),
-                _ => None,
-            },
-            KeyCode::Char('v') if e.modifiers.contains(KeyModifiers::CONTROL) => {
-                Some(InputAction::PasteClipboard)
-            }
+            KeyCode::Enter => Some(InputAction::Enter),
+            KeyCode::Esc => Some(InputAction::Escape),
+            KeyCode::Left => Some(InputAction::MoveLeft),
+            KeyCode::Right => Some(InputAction::MoveRight),
+            KeyCode::Char(c) => Some(InputAction::Insert(c)),
             _ => None,
         }
     }

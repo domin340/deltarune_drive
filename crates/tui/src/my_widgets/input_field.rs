@@ -39,7 +39,10 @@ pub struct InputFieldState {
     pub local_cursor: Position,
 }
 
-pub struct InputField<T> {
+pub struct InputField<T>
+where
+    for<'text> T: Into<Text<'text>>,
+{
     pub text: T,
     pub show_cursor: bool,
 }

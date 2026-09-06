@@ -22,6 +22,12 @@ impl LinesString {
     }
 }
 
+impl ToString for LinesString {
+    fn to_string(&self) -> String {
+        self.0.join("\n")
+    }
+}
+
 impl From<String> for LinesString {
     fn from(value: String) -> Self {
         Self(value.split('\n').map(String::from).collect())

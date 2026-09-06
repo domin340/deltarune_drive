@@ -91,7 +91,7 @@ impl From<Position> for Cursor {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct InputFieldState {
     /// Local cursor, relative to input field
     pub cursor: Cursor,

@@ -29,6 +29,9 @@ impl InputAction {
             KeyCode::Esc => Some(InputAction::Escape),
             KeyCode::Left => Some(InputAction::MoveLeft),
             KeyCode::Right => Some(InputAction::MoveRight),
+            KeyCode::Down => Some(InputAction::MoveDown),
+            KeyCode::Up => Some(InputAction::MoveUp),
+            KeyCode::Backspace => Some(InputAction::DeleteChar),
             KeyCode::Char(c) => Some(InputAction::Insert(c)),
             _ => None,
         }

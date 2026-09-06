@@ -35,26 +35,63 @@ impl InputAction {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct InputFieldState {
-    pub local_cursor: Position,
+#[derive(Default, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Cursor {
+    x: i32,
+    y: i32,
 }
 
-impl InputFieldState {
-    pub fn move_to(&mut self, x: u16, y: u16) -> &mut Self {
-        self.local_cursor = Position { x, y };
-        self
+// Methods must ensure that the x and y positions are in u16 bounds
+impl Cursor {
+    pub const fn new(x: u16, y: u16) -> Self {
+        Self {
+            x: x as i32,
+            y: y as i32,
+        }
     }
 
-    pub fn move_by_x(&mut self, x: u16) -> &mut Self {
-        self.local_cursor.x += x;
-        self
+    pub const fn x(&self) -> u16 {
+        self.x as u16
     }
 
-    pub fn move_by_y(&mut self, y: u16) -> &mut Self {
-        self.local_cursor.y += y;
+    pub const fn y(&self) -> u16 {
+        self.y as u16
+    }
+
+    pub const fn moved_by(mut self, x: i32, y: i32) -> Self {
+        self.x = self.x.saturating_add(x);
+        if self.x < 0 {
+            self.x = 0;
+        }
+
+        self.y = self.y.saturating_add(y);
+        if self.y < 0 {
+            self.y = 0;
+        }
+
         self
     }
+}
+
+impl From<(i32, i32)> for Cursor {
+    fn from((x, y): (i32, i32)) -> Self {
+        Self::new(
+            x.try_into().unwrap_or_default(),
+            y.try_into().unwrap_or_default(),
+        )
+    }
+}
+
+impl From<Position> for Cursor {
+    fn from(value: Position) -> Self {
+        Self::new(value.x, value.y)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct InputFieldState {
+    /// Local cursor, relative to input field
+    pub cursor: Cursor,
 }
 
 #[derive(Debug)]
@@ -98,8 +135,8 @@ impl<'block, 'text> StatefulWidget for InputField<'block, 'text> {
 
         if self.show_cursor {
             let term_cursor_pos = (
-                text_area.x + state.local_cursor.x,
-                text_area.y + state.local_cursor.y,
+                text_area.x + state.cursor.x(),
+                text_area.y + state.cursor.y(),
             );
 
             // create cursor

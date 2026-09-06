@@ -1,7 +1,12 @@
 use crate::{
-    model::conf::Bkp,
-    model::state::{Focus, State},
-    my_widgets::button::{Button, ButtonState},
+    model::{
+        conf::Bkp,
+        state::{Focus, State},
+    },
+    my_widgets::{
+        button::{Button, ButtonState},
+        input_field::{InputField, InputFieldState},
+    },
 };
 use ratatui::{
     Frame,
@@ -79,6 +84,7 @@ impl State {
             block
         };
 
+        self.bkp_page(bkp_page_block.inner(bkp_page_area), frame);
         frame.render_widget(bkp_page_block, bkp_page_area);
     }
 
@@ -88,6 +94,31 @@ impl State {
             List::new(self.bkp_names()).highlight_style(highlight_style),
             area,
             &mut ListState::default().with_selected(self.list_item_idx()),
+        );
+    }
+
+    fn bkp_page(&self, area: Rect, frame: &mut Frame) {
+        let [name_input_area, _] =
+            Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
+
+        frame.render_stateful_widget(
+            InputField::new("Hello World")
+                .block({
+                    let mut block = Block::bordered().title("Backup Name");
+                    if self.is_focus(Focus::BkpName) {
+                        if self.editing {
+                            block = block.border_style(Style::default().fg(Color::DarkGray));
+                        } else {
+                            block =
+                                block.style(Style::default().bg(Color::DarkGray).fg(Color::White));
+                        };
+                    }
+
+                    block
+                })
+                .show_cursor(self.is_focus(Focus::BkpName) && self.editing),
+            name_input_area,
+            &mut InputFieldState::default(),
         );
     }
 

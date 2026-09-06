@@ -44,6 +44,23 @@ pub struct InputFieldState {
     pub local_cursor: Position,
 }
 
+impl InputFieldState {
+    pub fn move_to(&mut self, x: u16, y: u16) -> &mut Self {
+        self.local_cursor = Position { x, y };
+        self
+    }
+
+    pub fn move_by_x(&mut self, x: u16) -> &mut Self {
+        self.local_cursor.x += x;
+        self
+    }
+
+    pub fn move_by_y(&mut self, y: u16) -> &mut Self {
+        self.local_cursor.y += y;
+        self
+    }
+}
+
 #[derive(Debug)]
 pub struct InputField<'block, 'text> {
     pub text: Text<'text>,

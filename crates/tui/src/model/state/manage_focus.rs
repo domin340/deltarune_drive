@@ -101,6 +101,10 @@ impl State {
                 UiAction::Left => Focus::ExplorerList,
                 UiAction::Down | UiAction::Tab => Focus::BkpDesc,
                 UiAction::Escape => Focus::ExplorerList,
+                UiAction::Enter => {
+                    self.editing = true;
+                    Focus::BkpName
+                }
                 _ => Focus::BkpName,
             },
             Focus::BkpDesc => match action {
@@ -108,6 +112,10 @@ impl State {
                 UiAction::Down | UiAction::Tab => Focus::BkpCreated,
                 UiAction::Up => Focus::BkpName,
                 UiAction::Escape => Focus::ExplorerList,
+                UiAction::Enter => {
+                    self.editing = true;
+                    Focus::BkpDesc
+                }
                 _ => Focus::BkpDesc,
             },
             Focus::BkpCreated => match action {

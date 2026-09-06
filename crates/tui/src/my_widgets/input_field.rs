@@ -58,18 +58,21 @@ impl Cursor {
         self.y as u16
     }
 
-    pub const fn moved_by(mut self, x: i32, y: i32) -> Self {
-        self.x = self.x.saturating_add(x);
-        if self.x < 0 {
-            self.x = 0;
+    pub const fn moved_by(&self, x: i32, y: i32) -> Self {
+        let mut cursor = Cursor {
+            x: self.x.saturating_add(x),
+            y: self.y.saturating_add(y),
+        };
+
+        if cursor.x < 0 {
+            cursor.x = 0;
         }
 
-        self.y = self.y.saturating_add(y);
-        if self.y < 0 {
-            self.y = 0;
+        if cursor.y < 0 {
+            cursor.y = 0;
         }
 
-        self
+        cursor
     }
 }
 

@@ -15,7 +15,7 @@ pub enum InputAction {
 }
 
 impl InputAction {
-    pub fn parse_event(code: KeyCode, modifiers: KeyModifiers) -> Option<InputAction> {
+    pub fn parse(code: KeyCode, modifiers: KeyModifiers) -> Option<InputAction> {
         match code {
             key if modifiers.is_empty() => match key {
                 KeyCode::Backspace => Some(InputAction::DeleteChar),

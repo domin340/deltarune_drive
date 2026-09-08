@@ -2,8 +2,11 @@ mod model;
 mod my_widgets;
 
 use crate::{
-    model::conf::{Conf, extend_bkps_with_fakes},
-    model::state::{Focus, State, UiAction},
+    model::{
+        conf::{Conf, extend_bkps_with_fakes},
+        state::{Focus, State, UiAction},
+    },
+    my_widgets::input_field::InputAction,
 };
 use crossterm::event::{self, KeyCode};
 use ratatui::DefaultTerminal;
@@ -24,7 +27,19 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
             match key.code {
                 KeyCode::Char('q') => break 'run_app,
                 _ => {
-                    if let Some(ui_action) = UiAction::parse(key.code) {
+                    if state.editing {
+                        if let Some(action) = InputAction::parse_event(key) {
+                            let handled_action = match state.focus {
+                                Focus::BkpName => state.bkp_name_field.handle_action(action),
+                                Focus::BkpDesc => state.bkp_desc_field.handle_action(action),
+                                _ => false,
+                            };
+
+                            if !handled_action {
+                                state.editing = false;
+                            }
+                        }
+                    } else if let Some(ui_action) = UiAction::parse(key.code) {
                         state.exec_ui_action(ui_action);
                     }
                 }

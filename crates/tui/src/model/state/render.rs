@@ -5,7 +5,7 @@ use crate::{
     },
     my_widgets::{
         button::{Button, ButtonState},
-        input_field::{InputField, InputFieldState},
+        input_field::Field,
     },
 };
 use ratatui::{
@@ -19,6 +19,10 @@ use ratatui::{
 impl State {
     pub fn is_focus(&self, focus: Focus) -> bool {
         self.focus == focus
+    }
+
+    pub fn is_editing(&self, focus: Focus) -> bool {
+        self.editing && self.is_focus(focus)
     }
 
     pub fn is_focus_explorer(&self) -> bool {
@@ -101,8 +105,9 @@ impl State {
         let [name_input_area, _] =
             Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
 
-        frame.render_stateful_widget(
-            InputField::new("Hello World")
+        frame.render_widget(
+            self.bkp_name_field
+                .to_input_item(self.is_editing(Focus::BkpName))
                 .block({
                     let mut block = Block::bordered().title("Backup Name");
                     if self.is_focus(Focus::BkpName) {
@@ -115,10 +120,8 @@ impl State {
                     }
 
                     block
-                })
-                .show_cursor(self.is_focus(Focus::BkpName) && self.editing),
+                }),
             name_input_area,
-            &mut InputFieldState::default(),
         );
     }
 

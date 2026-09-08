@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Position, Rect},
     style::Modifier,
     text::{Line, Text},
-    widgets::{Block, StatefulWidget, Widget},
+    widgets::{Block, Widget},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -77,6 +77,14 @@ impl Cursor {
 
         cursor
     }
+
+    pub const fn raw_x(&self) -> i32 {
+        self.x
+    }
+
+    pub const fn raw_y(&self) -> i32 {
+        self.y
+    }
 }
 
 impl From<(i32, i32)> for Cursor {
@@ -98,8 +106,8 @@ impl From<Position> for Cursor {
 pub struct Field {
     pub cursor: Cursor,
     pub lines: Vec<String>,
-    pub max_lines: Option<usize>,
-    pub max_line_len: Option<usize>,
+    pub max_lines: usize,
+    pub max_line_len: usize,
 }
 
 impl Field {
@@ -110,12 +118,12 @@ impl Field {
         }
     }
 
-    pub const fn set_max_lines(mut self, max_lines: Option<usize>) -> Self {
+    pub const fn set_max_lines(mut self, max_lines: usize) -> Self {
         self.max_lines = max_lines;
         self
     }
 
-    pub const fn set_max_line_len(mut self, max_line_len: Option<usize>) -> Self {
+    pub const fn set_max_line_len(mut self, max_line_len: usize) -> Self {
         self.max_line_len = max_line_len;
         self
     }
@@ -135,6 +143,42 @@ impl Field {
                 .collect::<Text<'_>>(),
         )
         .set_cursor(self.cursor.clone())
+    }
+
+    pub fn y(&self) -> u16 {
+        self.cursor.y()
+    }
+
+    pub fn x(&self) -> u16 {
+        self.cursor.y()
+    }
+
+    pub fn line(&self) -> &str {
+        let idx = self.cursor.raw_y() as usize;
+        self.lines[idx].as_str()
+    }
+
+    pub fn line_mut(&mut self) -> &mut String {
+        let idx = self.cursor.raw_y() as usize;
+        &mut self.lines[idx]
+    }
+
+    pub const fn lines_count(&self) -> usize {
+        self.lines.len()
+    }
+
+    pub fn cursor_limit_y(&self) -> usize {
+        self.max_line_len.min(self.lines_count())
+    }
+
+    pub fn cursor_limit_x(&self) -> usize {
+        self.max_line_len.min(self.line().len())
+    }
+
+    pub fn cursor_to(&mut self, c: Cursor) {
+        let x_bound = self.cursor_limit_x().min(u16::MAX as usize) as u16;
+        let y_bound = self.cursor_limit_y().min(u16::MAX as usize) as u16;
+        self.cursor = Cursor::new(c.x().min(x_bound), c.y().min(y_bound))
     }
 }
 

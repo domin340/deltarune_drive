@@ -94,34 +94,12 @@ impl From<Position> for Cursor {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TextLimits {
-    max_lines: usize,
-    max_line_len: usize,
-}
-
-impl TextLimits {
-    pub const fn new(max_lines: usize, max_line_len: usize) -> Self {
-        Self {
-            max_lines,
-            max_line_len,
-        }
-    }
-
-    pub const fn max_lines(&self) -> usize {
-        self.max_lines
-    }
-
-    pub const fn max_line_len(&self) -> usize {
-        self.max_line_len
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct Field {
     pub cursor: Cursor,
     pub lines: Vec<String>,
-    pub limits: Option<TextLimits>,
+    pub max_lines: Option<usize>,
+    pub max_line_len: Option<usize>,
 }
 
 impl Field {
@@ -132,16 +110,21 @@ impl Field {
         }
     }
 
+    pub const fn set_max_lines(mut self, max_lines: Option<usize>) -> Self {
+        self.max_lines = max_lines;
+        self
+    }
+
+    pub const fn set_max_line_len(mut self, max_line_len: Option<usize>) -> Self {
+        self.max_line_len = max_line_len;
+        self
+    }
+
     pub fn from_str(s: &str) -> Self {
         Self {
             lines: s.split("\n").map(String::from).collect(),
             ..Default::default()
         }
-    }
-
-    pub const fn set_limits(mut self, limits: Option<TextLimits>) -> Self {
-        self.limits = limits;
-        self
     }
 
     pub fn to_input_item(&self) -> FieldItem {

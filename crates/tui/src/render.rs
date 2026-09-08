@@ -1,12 +1,8 @@
 use crate::{
-    model::{
-        conf::Bkp,
-        state::{Focus, State},
-    },
-    my_widgets::{
-        button::{Button, ButtonState},
-        input_field::Field,
-    },
+    app::App,
+    conf::Bkp,
+    manage_focus::Focus,
+    my_widgets::button::{Button, ButtonState},
 };
 use ratatui::{
     Frame,
@@ -16,7 +12,7 @@ use ratatui::{
     widgets::{Block, List, ListState},
 };
 
-impl State {
+impl App {
     pub fn is_focus(&self, focus: Focus) -> bool {
         self.focus == focus
     }

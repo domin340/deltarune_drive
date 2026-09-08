@@ -1,4 +1,4 @@
-use crate::model::state::State;
+use crate::app::App;
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -39,7 +39,7 @@ pub enum Focus {
     BkpReplace,
 }
 
-impl State {
+impl App {
     pub fn list_item_idx(&self) -> Option<usize> {
         self.list_item.map(|item| item.idx())
     }

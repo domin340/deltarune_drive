@@ -1,11 +1,8 @@
-mod manage_focus;
-mod render;
-
-use crate::{model::conf::Conf, my_widgets::input_field::Field};
-pub use manage_focus::{ExplorerListItem, Focus, UiAction};
+use crate::manage_focus::{ExplorerListItem, Focus};
+use crate::{conf::Conf, my_widgets::input_field::Field};
 
 #[derive(Default)]
-pub struct State {
+pub struct App {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
     pub focus: Focus,
@@ -16,7 +13,7 @@ pub struct State {
     pub list_item: Option<ExplorerListItem>,
 }
 
-impl State {
+impl App {
     pub fn from_conf(conf: Conf) -> Self {
         Self {
             conf,

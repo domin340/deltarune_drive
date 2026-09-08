@@ -1,11 +1,13 @@
-mod model;
+mod app;
+mod conf;
+mod manage_focus;
 mod my_widgets;
+mod render;
 
 use crate::{
-    model::{
-        conf::{Conf, extend_bkps_with_fakes},
-        state::{Focus, State, UiAction},
-    },
+    app::App,
+    conf::{Conf, extend_bkps_with_fakes},
+    manage_focus::{Focus, UiAction},
     my_widgets::input_field::InputAction,
 };
 use crossterm::event::{self, KeyCode};
@@ -18,29 +20,29 @@ fn main() -> io::Result<()> {
 }
 
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
-    let mut state = create_state();
+    let mut app = create_app();
 
     'run_app: loop {
-        term.draw(|frame| state.ui(frame))?;
+        term.draw(|frame| app.ui(frame))?;
 
         if let Some(key) = event::read()?.as_key_press_event() {
             match key.code {
                 KeyCode::Char('q') => break 'run_app,
                 _ => {
-                    if state.editing {
+                    if app.editing {
                         if let Some(action) = InputAction::parse_event(key) {
-                            let handled_action = match state.focus {
-                                Focus::BkpName => state.bkp_name_field.handle_action(action),
-                                Focus::BkpDesc => state.bkp_desc_field.handle_action(action),
+                            let handled_action = match app.focus {
+                                Focus::BkpName => app.bkp_name_field.handle_action(action),
+                                Focus::BkpDesc => app.bkp_desc_field.handle_action(action),
                                 _ => false,
                             };
 
                             if !handled_action {
-                                state.editing = false;
+                                app.editing = false;
                             }
                         }
                     } else if let Some(ui_action) = UiAction::parse(key.code) {
-                        state.exec_ui_action(ui_action);
+                        app.exec_ui_action(ui_action);
                     }
                 }
             }
@@ -64,17 +66,17 @@ fn create_conf() -> Conf {
     }
 }
 
-fn create_state() -> State {
+fn create_app() -> App {
     let conf = create_conf();
-    let mut state = State::from_conf(conf);
+    let mut app = App::from_conf(conf);
 
-    if state.bkps_empty() {
-        state.list_item = None;
-        state.focus = Focus::ExplorerNew
+    if app.bkps_empty() {
+        app.list_item = None;
+        app.focus = Focus::ExplorerNew
     } else {
-        state.list_item = Some(0.into());
-        state.focus = Focus::ExplorerList
+        app.list_item = Some(0.into());
+        app.focus = Focus::ExplorerList
     };
 
-    state
+    app
 }

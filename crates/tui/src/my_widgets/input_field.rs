@@ -204,6 +204,10 @@ impl Field {
     }
 
     pub fn handle_action(&mut self, action: InputAction) -> bool {
+        // Take return type further and make it a struct that handles what happened:
+        // struct HandledInputAction {
+        //   pub unfocus: bool,
+        // }
         match action {
             InputAction::MoveLeft => self.move_cursor(-1, 0),
             InputAction::MoveRight => self.move_cursor(1, 0),

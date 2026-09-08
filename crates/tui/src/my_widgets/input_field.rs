@@ -87,15 +87,6 @@ impl Cursor {
     }
 }
 
-impl From<(i32, i32)> for Cursor {
-    fn from((x, y): (i32, i32)) -> Self {
-        Self::new(
-            x.try_into().unwrap_or_default(),
-            y.try_into().unwrap_or_default(),
-        )
-    }
-}
-
 impl From<Position> for Cursor {
     fn from(value: Position) -> Self {
         Self::new(value.x, value.y)

@@ -3,6 +3,7 @@ use crate::{conf::Conf, my_widgets::input_field::Field};
 
 pub const MAX_NAME_FIELD_LINES: usize = 1;
 
+// FIXME: backup preview shouldn't allocate needlessly for fields when previewing items.
 pub struct App {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,

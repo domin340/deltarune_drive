@@ -143,14 +143,20 @@ impl Field {
         }
     }
 
-    pub fn to_input_item(&self) -> FieldItem {
+    pub fn to_input_item(&self, show_cursor: bool) -> FieldItem<'_, '_> {
+        let cursor = if show_cursor {
+            Some(self.cursor.clone())
+        } else {
+            None
+        };
+
         FieldItem::new(
             self.lines
                 .iter()
                 .map(|s| Line::raw(s.as_str()))
                 .collect::<Text<'_>>(),
         )
-        .set_cursor(self.cursor.clone())
+        .set_cursor(cursor)
     }
 
     pub fn y(&self) -> u16 {
@@ -326,8 +332,8 @@ impl<'b, 't> FieldItem<'b, 't> {
         }
     }
 
-    pub fn set_cursor(mut self, cursor: Cursor) -> Self {
-        self.cursor = Some(cursor);
+    pub fn set_cursor(mut self, cursor: Option<Cursor>) -> Self {
+        self.cursor = cursor;
         self
     }
 

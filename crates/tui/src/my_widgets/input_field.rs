@@ -102,7 +102,7 @@ impl From<Position> for Cursor {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Field {
     pub cursor: Cursor,
     pub lines: Vec<String>,
@@ -113,13 +113,26 @@ pub struct Field {
     line_lens: Vec<usize>,
 }
 
+impl Default for Field {
+    fn default() -> Self {
+        let lines = vec![String::new()];
+        Self::new(lines)
+    }
+}
+
 impl Field {
     pub fn new(lines: Vec<String>) -> Self {
+        if lines.is_empty() {
+            panic!("lines mustn't be empty! at least a single element is required");
+        }
+
         let line_lens = lines.iter().map(|s| s.chars().count()).collect();
         Self {
             lines,
             line_lens,
-            ..Default::default()
+            cursor: Cursor::default(),
+            max_lines: usize::MAX,
+            max_line_len: usize::MAX,
         }
     }
 
@@ -134,13 +147,7 @@ impl Field {
     }
 
     pub fn from_str(s: &str) -> Self {
-        let lines: Vec<String> = s.split('\n').map(String::from).collect();
-        let line_lens = lines.iter().map(|s| s.chars().count()).collect();
-        Self {
-            lines,
-            line_lens,
-            ..Default::default()
-        }
+        Self::new(s.split('\n').map(String::from).collect())
     }
 
     pub fn to_input_item(&self, show_cursor: bool) -> FieldItem<'_, '_> {

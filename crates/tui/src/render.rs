@@ -1,5 +1,5 @@
 use crate::{
-    app::App,
+    app::{App, MAX_NAME_FIELD_LINES},
     conf::Bkp,
     manage_focus::Focus,
     my_widgets::button::{Button, ButtonState},
@@ -98,8 +98,11 @@ impl App {
     }
 
     fn bkp_page(&self, area: Rect, frame: &mut Frame) {
-        let [name_input_area, _] =
-            Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
+        let [name_input_area, _] = Layout::vertical([
+            Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
+            Constraint::Fill(1),
+        ])
+        .areas(area);
 
         frame.render_widget(
             self.bkp_name_field

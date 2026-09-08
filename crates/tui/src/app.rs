@@ -1,6 +1,8 @@
 use crate::manage_focus::{ExplorerListItem, Focus};
 use crate::{conf::Conf, my_widgets::input_field::Field};
 
+pub const MAX_NAME_FIELD_LINES: usize = 1;
+
 pub struct App {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
@@ -23,7 +25,7 @@ impl App {
         Self {
             conf: Conf::default(),
             focus: Focus::default(),
-            bkp_name_field: Field::default().set_max_lines(1),
+            bkp_name_field: Field::default().set_max_lines(MAX_NAME_FIELD_LINES),
             bkp_desc_field: Field::default(),
             editing: false,
             list_item: None,

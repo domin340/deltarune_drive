@@ -159,14 +159,6 @@ impl Field {
         .set_cursor(cursor)
     }
 
-    pub fn y(&self) -> u16 {
-        self.cursor.y()
-    }
-
-    pub fn x(&self) -> u16 {
-        self.cursor.x()
-    }
-
     pub fn line(&self) -> &str {
         let idx = self.cursor.raw_y() as usize;
         self.lines[idx].as_str()

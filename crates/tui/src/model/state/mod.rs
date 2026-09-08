@@ -1,10 +1,7 @@
 mod manage_focus;
 mod render;
 
-use crate::{
-    model::conf::Conf,
-    my_widgets::input_field::{Cursor, Field, InputAction},
-};
+use crate::{model::conf::Conf, my_widgets::input_field::Field};
 pub use manage_focus::{ExplorerListItem, Focus, UiAction};
 
 #[derive(Default)]

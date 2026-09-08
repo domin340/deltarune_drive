@@ -108,12 +108,17 @@ pub struct Field {
     pub lines: Vec<String>,
     pub max_lines: usize,
     pub max_line_len: usize,
+    /// Cached char count per line, kept in sync with `lines`.
+    /// Index-aligned with `lines` — line_lens[i] == lines[i].chars().count().
+    line_lens: Vec<usize>,
 }
 
 impl Field {
     pub fn new(lines: Vec<String>) -> Self {
+        let line_lens = lines.iter().map(|s| s.chars().count()).collect();
         Self {
             lines,
+            line_lens,
             ..Default::default()
         }
     }
@@ -129,8 +134,11 @@ impl Field {
     }
 
     pub fn from_str(s: &str) -> Self {
+        let lines: Vec<String> = s.split('\n').map(String::from).collect();
+        let line_lens = lines.iter().map(|s| s.chars().count()).collect();
         Self {
-            lines: s.split("\n").map(String::from).collect(),
+            lines,
+            line_lens,
             ..Default::default()
         }
     }
@@ -150,7 +158,7 @@ impl Field {
     }
 
     pub fn x(&self) -> u16 {
-        self.cursor.y()
+        self.cursor.x()
     }
 
     pub fn line(&self) -> &str {
@@ -167,12 +175,26 @@ impl Field {
         self.lines.len()
     }
 
+    /// Public getters for the pre-computed per-line char counts.
+    pub fn line_lens(&self) -> &[usize] {
+        &self.line_lens
+    }
+
+    pub fn line_len(&self, idx: usize) -> usize {
+        self.line_lens[idx]
+    }
+
+    /// Cached char count of the line the cursor is currently on — O(1).
+    pub fn current_line_len(&self) -> usize {
+        self.line_lens[self.cursor.raw_y() as usize]
+    }
+
     pub fn cursor_limit_y(&self) -> usize {
         self.max_line_len.min(self.lines_count())
     }
 
     pub fn cursor_limit_x(&self) -> usize {
-        self.max_line_len.min(self.line().len())
+        self.max_line_len.min(self.current_line_len())
     }
 
     pub fn cursor_to(&mut self, c: Cursor) {

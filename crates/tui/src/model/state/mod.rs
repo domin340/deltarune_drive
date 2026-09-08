@@ -1,7 +1,10 @@
 mod manage_focus;
 mod render;
 
-use crate::{model::conf::Conf, my_widgets::input_field::InputFieldState};
+use crate::{
+    model::conf::Conf,
+    my_widgets::input_field::{Cursor, Field, InputAction},
+};
 pub use manage_focus::{ExplorerListItem, Focus, UiAction};
 
 /// String divided into lines.
@@ -20,6 +23,18 @@ impl LinesString {
     pub fn lines(&self) -> impl Iterator<Item = &str> {
         self.0.iter().map(String::as_str)
     }
+
+    pub const fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub const fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn get_line(&self, line: usize) -> Option<&str> {
+        self.0.get(line).map(String::as_str)
+    }
 }
 
 impl ToString for LinesString {
@@ -35,19 +50,12 @@ impl From<String> for LinesString {
 }
 
 #[derive(Default)]
-pub struct BkpCtx {
-    pub name_field: String,
-    pub desc_field: LinesString,
-    /// Use default for inactive input fields
-    pub cur_state: InputFieldState,
-}
-
-#[derive(Default)]
 pub struct State {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
     pub focus: Focus,
-    pub bkp_ctx: BkpCtx,
+    pub bkp_name_field: Field,
+    pub bkp_desc_field: Field,
     /// NOTE: can be set by [`State::exec_ui_action`] usually by pressing enter
     pub editing: bool,
     pub list_item: Option<ExplorerListItem>,

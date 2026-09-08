@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::{Position, Rect},
     style::Modifier,
-    text::Text,
+    text::{Line, Text},
     widgets::{Block, StatefulWidget, Widget},
 };
 
@@ -94,43 +94,99 @@ impl From<Position> for Cursor {
     }
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct InputFieldState {
-    /// Local cursor, relative to input field
-    pub cursor: Cursor,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TextLimits {
+    max_lines: usize,
+    max_line_len: usize,
 }
 
-#[derive(Debug)]
-pub struct InputField<'block, 'text> {
-    pub text: Text<'text>,
-    pub block: Option<Block<'block>>,
-    pub show_cursor: bool,
-}
-
-impl<'block, 'text> InputField<'block, 'text> {
-    pub fn new(text: impl Into<Text<'text>>) -> Self {
+impl TextLimits {
+    pub const fn new(max_lines: usize, max_line_len: usize) -> Self {
         Self {
-            text: text.into(),
-            block: None,
-            show_cursor: true,
+            max_lines,
+            max_line_len,
         }
     }
 
-    pub fn show_cursor(mut self, show: bool) -> Self {
-        self.show_cursor = show;
+    pub const fn max_lines(&self) -> usize {
+        self.max_lines
+    }
+
+    pub const fn max_line_len(&self) -> usize {
+        self.max_line_len
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct Field {
+    pub cursor: Cursor,
+    pub lines: Vec<String>,
+    pub limits: Option<TextLimits>,
+}
+
+impl Field {
+    pub fn new(lines: Vec<String>) -> Self {
+        Self {
+            lines,
+            ..Default::default()
+        }
+    }
+
+    pub fn from_str(s: &str) -> Self {
+        Self {
+            lines: s.split("\n").map(String::from).collect(),
+            ..Default::default()
+        }
+    }
+
+    pub const fn set_limits(mut self, limits: Option<TextLimits>) -> Self {
+        self.limits = limits;
         self
     }
 
-    pub fn block(mut self, block: Block<'block>) -> Self {
+    pub fn to_input_item(&self) -> FieldItem {
+        FieldItem::new(
+            self.lines
+                .iter()
+                .map(|s| Line::raw(s.as_str()))
+                .collect::<Text<'_>>(),
+        )
+        .set_cursor(self.cursor.clone())
+    }
+}
+
+#[derive(Debug)]
+pub struct FieldItem<'b, 't> {
+    pub text: Text<'t>,
+    pub block: Option<Block<'b>>,
+    pub cursor: Option<Cursor>,
+}
+
+impl<'b, 't> FieldItem<'b, 't> {
+    pub fn new(text: impl Into<Text<'t>>) -> Self {
+        Self {
+            text: text.into(),
+            block: None,
+            cursor: None,
+        }
+    }
+
+    pub fn set_cursor(mut self, cursor: Cursor) -> Self {
+        self.cursor = Some(cursor);
+        self
+    }
+
+    pub fn block(mut self, block: Block<'b>) -> Self {
         self.block = Some(block);
         self
     }
 }
 
-impl<'block, 'text> StatefulWidget for InputField<'block, 'text> {
-    type State = InputFieldState;
-
-    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State) {
+impl<'b, 't> Widget for FieldItem<'b, 't> {
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer)
+    where
+        Self: Sized,
+    {
         let text_area = if let Some(block) = self.block {
             let inner = block.inner(area);
             block.render(area, buf);
@@ -139,13 +195,12 @@ impl<'block, 'text> StatefulWidget for InputField<'block, 'text> {
             area
         };
 
-        if self.show_cursor {
-            let term_cursor_pos = (
-                text_area.x + state.cursor.x(),
-                text_area.y + state.cursor.y(),
-            );
+        if let Some(cursor) = self.cursor {
+            let term_cursor_pos = Position {
+                x: text_area.x + cursor.x(),
+                y: text_area.y + cursor.y(),
+            };
 
-            // create cursor
             buf.cell_mut(term_cursor_pos)
                 .map(|cell| cell.modifier = Modifier::REVERSED);
         }

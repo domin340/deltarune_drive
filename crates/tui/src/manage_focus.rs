@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::{app::App, my_widgets::input_field::Field};
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -102,6 +102,8 @@ impl App {
                 UiAction::Down | UiAction::Tab => Focus::BkpDesc,
                 UiAction::Escape => Focus::ExplorerList,
                 UiAction::Enter => {
+                    // FIXME: right now the field is reconstructed, this can be optimized.
+                    self.bkp_name_field = Field::from_str(self.selected_bkp().unwrap().name());
                     self.editing = true;
                     Focus::BkpName
                 }

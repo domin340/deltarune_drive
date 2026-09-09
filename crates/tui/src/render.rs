@@ -2,7 +2,10 @@ use crate::{
     app::{App, MAX_NAME_FIELD_LINES},
     conf::Bkp,
     manage_focus::Focus,
-    my_widgets::button::{Button, ButtonState},
+    my_widgets::{
+        button::{Button, ButtonState},
+        input_field::FieldItem,
+    },
 };
 use ratatui::{
     Frame,
@@ -98,16 +101,23 @@ impl App {
     }
 
     fn bkp_page(&self, area: Rect, frame: &mut Frame) {
-        let [name_input_area, _] = Layout::vertical([
-            Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
-            Constraint::Fill(1),
-        ])
-        .areas(area);
+        if self.list_item.is_some() {
+            let [name_input_area, _] = Layout::vertical([
+                Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
+                Constraint::Fill(1),
+            ])
+            .areas(area);
 
-        frame.render_widget(
-            self.bkp_name_field
-                .to_input_item(self.is_editing(Focus::BkpName))
-                .block({
+            let (name_field, name_cursor) = if self.is_editing(Focus::BkpName) {
+                let cursor = self.bkp_name_field.cursor.clone();
+                (self.bkp_name_field.to_input_item(), Some(cursor))
+            } else {
+                let bkp_name = self.selected_bkp().unwrap().name();
+                (FieldItem::from_str(bkp_name), None)
+            };
+
+            frame.render_widget(
+                name_field.set_cursor(name_cursor).block({
                     let mut block = Block::bordered().title("Backup Name");
                     if self.is_focus(Focus::BkpName) {
                         if self.editing {
@@ -120,8 +130,24 @@ impl App {
 
                     block
                 }),
-            name_input_area,
-        );
+                name_input_area,
+            );
+        } else {
+            let [_, info_area, _] = Layout::vertical([
+                Constraint::Fill(1),
+                Constraint::Length(1),
+                Constraint::Fill(1),
+            ])
+            .areas(area);
+
+            let line = Line::from("no backup selected").centered();
+            frame.render_widget(line, info_area);
+        }
+    }
+
+    fn selected_bkp(&self) -> Option<&Bkp> {
+        let idx = self.list_item_idx()?;
+        self.conf.bkps.get(idx)
     }
 
     fn bkp_names(&self) -> impl Iterator<Item = &str> {

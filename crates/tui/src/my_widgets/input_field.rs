@@ -137,6 +137,12 @@ impl HandledInputAction {
     }
 }
 
+impl ToString for Field {
+    fn to_string(&self) -> String {
+        self.lines.join("\n")
+    }
+}
+
 impl Field {
     pub fn new(lines: Vec<String>) -> Self {
         if lines.is_empty() {

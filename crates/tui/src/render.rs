@@ -145,9 +145,14 @@ impl App {
         }
     }
 
-    fn selected_bkp(&self) -> Option<&Bkp> {
+    pub fn selected_bkp(&self) -> Option<&Bkp> {
         let idx = self.list_item_idx()?;
         self.conf.bkps.get(idx)
+    }
+
+    pub fn selected_bkp_mut(&mut self) -> Option<&mut Bkp> {
+        let idx = self.list_item_idx()?;
+        self.conf.bkps.get_mut(idx)
     }
 
     fn bkp_names(&self) -> impl Iterator<Item = &str> {

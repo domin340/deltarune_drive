@@ -1,4 +1,4 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     layout::{Position, Rect},
     style::Modifier,
@@ -6,6 +6,7 @@ use ratatui::{
     widgets::{Block, Widget},
 };
 
+/// See [`Self::parse_event`]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum InputAction {
     MoveLeft,
@@ -15,24 +16,27 @@ pub enum InputAction {
     Insert(char),
     DeleteChar,
     Escape,
-    Enter,
+    Newline,
+    Confirm,
 }
 
 impl InputAction {
     pub fn parse_event(e: KeyEvent) -> Option<InputAction> {
-        if !e.modifiers.is_empty() {
-            return None;
-        }
-
         match e.code {
-            KeyCode::Enter => Some(InputAction::Enter),
-            KeyCode::Esc => Some(InputAction::Escape),
-            KeyCode::Left => Some(InputAction::MoveLeft),
-            KeyCode::Right => Some(InputAction::MoveRight),
-            KeyCode::Down => Some(InputAction::MoveDown),
-            KeyCode::Up => Some(InputAction::MoveUp),
-            KeyCode::Backspace => Some(InputAction::DeleteChar),
-            KeyCode::Char(c) => Some(InputAction::Insert(c)),
+            KeyCode::Enter if e.modifiers.contains(KeyModifiers::SHIFT) => {
+                Some(InputAction::Newline)
+            }
+            code if e.modifiers.is_empty() => match code {
+                KeyCode::Enter => Some(InputAction::Confirm),
+                KeyCode::Esc => Some(InputAction::Escape),
+                KeyCode::Left => Some(InputAction::MoveLeft),
+                KeyCode::Right => Some(InputAction::MoveRight),
+                KeyCode::Down => Some(InputAction::MoveDown),
+                KeyCode::Up => Some(InputAction::MoveUp),
+                KeyCode::Backspace => Some(InputAction::DeleteChar),
+                KeyCode::Char(c) => Some(InputAction::Insert(c)),
+                _ => None,
+            },
             _ => None,
         }
     }
@@ -111,6 +115,28 @@ impl Default for Field {
     }
 }
 
+#[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct HandledInputAction {
+    pub confirm: bool,
+    pub handled: bool,
+}
+
+impl HandledInputAction {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn set_handled(mut self, handled: bool) -> Self {
+        self.handled = handled;
+        self
+    }
+
+    pub fn set_confirm(mut self, confirm: bool) -> Self {
+        self.confirm = confirm;
+        self
+    }
+}
+
 impl Field {
     pub fn new(lines: Vec<String>) -> Self {
         if lines.is_empty() {
@@ -139,6 +165,27 @@ impl Field {
 
     pub fn from_str(s: &str) -> Self {
         Self::new(s.split('\n').map(String::from).collect())
+    }
+
+    pub fn handle_action(&mut self, action: InputAction) -> HandledInputAction {
+        let mut handled_action = true;
+        let mut confirm = false;
+
+        match action {
+            InputAction::MoveLeft => self.move_cursor(-1, 0),
+            InputAction::MoveRight => self.move_cursor(1, 0),
+            InputAction::MoveUp => self.move_cursor(0, -1),
+            InputAction::MoveDown => self.move_cursor(0, 1),
+            InputAction::Insert(c) => self.insert_char(c),
+            InputAction::DeleteChar => self.delete_char(),
+            InputAction::Newline => self.insert_newline(),
+            InputAction::Confirm => confirm = true,
+            InputAction::Escape => handled_action = false,
+        };
+
+        HandledInputAction::default()
+            .set_confirm(confirm)
+            .set_handled(handled_action)
     }
 
     pub fn to_input_item(&self) -> FieldItem<'_, '_> {
@@ -190,25 +237,6 @@ impl Field {
         let x_bound = self.cursor_limit_x().min(u16::MAX as usize) as u16;
         let y_bound = self.cursor_limit_y().min(u16::MAX as usize) as u16;
         self.cursor = Cursor::new(c.x().min(x_bound), c.y().min(y_bound))
-    }
-
-    pub fn handle_action(&mut self, action: InputAction) -> bool {
-        // TODO:
-        // Take return type further and make it a struct that handles what happened:
-        // struct HandledInputAction {
-        //   pub unfocus: bool,
-        // }
-        match action {
-            InputAction::MoveLeft => self.move_cursor(-1, 0),
-            InputAction::MoveRight => self.move_cursor(1, 0),
-            InputAction::MoveUp => self.move_cursor(0, -1),
-            InputAction::MoveDown => self.move_cursor(0, 1),
-            InputAction::Insert(c) => self.insert_char(c),
-            InputAction::DeleteChar => self.delete_char(),
-            InputAction::Enter => self.insert_newline(),
-            InputAction::Escape => return false,
-        }
-        true
     }
 
     fn move_cursor(&mut self, dx: i32, dy: i32) {

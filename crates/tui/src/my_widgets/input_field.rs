@@ -82,11 +82,11 @@ impl Cursor {
         cursor
     }
 
-    pub const fn raw_x(&self) -> i32 {
+    const fn raw_x(&self) -> i32 {
         self.x
     }
 
-    pub const fn raw_y(&self) -> i32 {
+    const fn raw_y(&self) -> i32 {
         self.y
     }
 }

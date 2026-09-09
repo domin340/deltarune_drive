@@ -6,7 +6,7 @@ mod render;
 
 use crate::{
     app::App,
-    conf::{Conf, extend_bkps_with_fakes},
+    conf::{Bkp, Conf, extend_bkps_with_fakes},
     manage_focus::{Focus, UiAction},
     my_widgets::input_field::InputAction,
 };
@@ -17,6 +17,27 @@ use std::io;
 fn main() -> io::Result<()> {
     ratatui::run(run_app)?;
     Ok(())
+}
+
+fn handle_input_action(app: &mut App, action: InputAction) {
+    match app.focus {
+        Focus::BkpName => {
+            let res = app.bkp_name_field.handle_action(action);
+
+            if res.confirm {
+                app.editing = false;
+
+                let new_name = app.bkp_name_field.to_string();
+                app.selected_bkp_mut().map(|bkp| match bkp {
+                    Bkp::Unregistered(bkp) => bkp.name = new_name,
+                    Bkp::Registered(bkp) => bkp.name = new_name,
+                });
+            } else if !res.handled {
+                app.editing = false;
+            }
+        }
+        _ => {}
+    }
 }
 
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
@@ -31,15 +52,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
                 _ => {
                     if app.editing {
                         if let Some(action) = InputAction::parse_event(key) {
-                            let handled_action = match app.focus {
-                                Focus::BkpName => app.bkp_name_field.handle_action(action),
-                                Focus::BkpDesc => app.bkp_desc_field.handle_action(action),
-                                _ => false,
-                            };
-
-                            if !handled_action {
-                                app.editing = false;
-                            }
+                            handle_input_action(&mut app, action)
                         }
                     } else if let Some(ui_action) = UiAction::parse(key.code) {
                         app.exec_ui_action(ui_action);

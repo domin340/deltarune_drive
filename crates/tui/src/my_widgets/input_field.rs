@@ -141,20 +141,13 @@ impl Field {
         Self::new(s.split('\n').map(String::from).collect())
     }
 
-    pub fn to_input_item(&self, show_cursor: bool) -> FieldItem<'_, '_> {
-        let cursor = if show_cursor {
-            Some(self.cursor.clone())
-        } else {
-            None
-        };
-
+    pub fn to_input_item(&self) -> FieldItem<'_, '_> {
         FieldItem::new(
             self.lines
                 .iter()
                 .map(|s| Line::raw(s.as_str()))
                 .collect::<Text<'_>>(),
         )
-        .set_cursor(cursor)
     }
 
     pub fn line(&self) -> &str {
@@ -314,7 +307,21 @@ pub struct FieldItem<'b, 't> {
     pub cursor: Option<Cursor>,
 }
 
+impl<'t> From<&'t str> for FieldItem<'_, 't> {
+    fn from(value: &'t str) -> Self {
+        Self::from_str(value)
+    }
+}
+
 impl<'b, 't> FieldItem<'b, 't> {
+    pub fn from_str(s: &'t str) -> Self {
+        Self {
+            text: Text::from(s),
+            block: None,
+            cursor: None,
+        }
+    }
+
     pub fn new(text: impl Into<Text<'t>>) -> Self {
         Self {
             text: text.into(),

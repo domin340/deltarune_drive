@@ -203,14 +203,22 @@ impl Field {
         )
     }
 
-    pub fn line(&self) -> &str {
+    pub fn current_line(&self) -> &str {
         let idx = self.cursor.raw_y() as usize;
         self.lines[idx].as_str()
     }
 
-    pub fn line_mut(&mut self) -> &mut String {
+    pub fn line(&self, idx: usize) -> Option<&str> {
+        self.lines.get(idx).map(String::as_str)
+    }
+
+    pub fn current_line_mut(&mut self) -> &mut String {
         let idx = self.cursor.raw_y() as usize;
         &mut self.lines[idx]
+    }
+
+    pub fn line_mut(&mut self, idx: usize) -> Option<&mut String> {
+        self.lines.get_mut(idx)
     }
 
     pub const fn lines_count(&self) -> usize {
@@ -253,11 +261,11 @@ impl Field {
     /// Byte offset in the current line for the cursor's char-column position.
     fn byte_offset_in_line(&self) -> usize {
         let col = self.cursor.raw_x() as usize;
-        self.line()
+        self.current_line()
             .char_indices()
             .nth(col)
             .map(|(i, _)| i)
-            .unwrap_or_else(|| self.line().len())
+            .unwrap_or_else(|| self.current_line().len())
     }
 
     pub fn insert_char(&mut self, c: char) {

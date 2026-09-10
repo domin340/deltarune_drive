@@ -1,7 +1,7 @@
 use crate::{
     app::{App, MAX_NAME_FIELD_LINES},
     conf::Bkp,
-    manage_focus::Focus,
+    manage_focus::{ExplorerListItem, Focus},
     my_widgets::{
         button::{Button, ButtonState},
         input_field::FieldItem,
@@ -87,7 +87,13 @@ impl App {
             block
         };
 
-        self.bkp_page(bkp_page_block.inner(bkp_page_area), frame);
+        let content_bkp_page_area = bkp_page_block.inner(bkp_page_area);
+        if let Some(bkp_idx) = self.list_item {
+            self.concrete_bkp_page(bkp_idx, content_bkp_page_area, frame);
+        } else {
+            self.empty_bkp_page(content_bkp_page_area, frame);
+        }
+
         frame.render_widget(bkp_page_block, bkp_page_area);
     }
 
@@ -100,49 +106,48 @@ impl App {
         );
     }
 
-    fn bkp_page(&self, area: Rect, frame: &mut Frame) {
-        if self.list_item.is_some() {
-            let [name_input_area, _] = Layout::vertical([
-                Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
-                Constraint::Fill(1),
-            ])
-            .areas(area);
+    fn empty_bkp_page(&self, area: Rect, frame: &mut Frame) {
+        let [_, info_area, _] = Layout::vertical([
+            Constraint::Fill(1),
+            Constraint::Length(1),
+            Constraint::Fill(1),
+        ])
+        .areas(area);
 
-            let (name_field, name_cursor) = if self.is_editing(Focus::BkpName) {
-                let cursor = self.bkp_name_field.cursor.clone();
-                (self.bkp_name_field.to_input_item(), Some(cursor))
-            } else {
-                let bkp_name = self.selected_bkp().unwrap().name();
-                (FieldItem::from_str(bkp_name), None)
-            };
+        let line = Line::from("no backup selected").centered();
+        frame.render_widget(line, info_area);
+    }
 
-            frame.render_widget(
-                name_field.set_cursor(name_cursor).block({
-                    let mut block = Block::bordered().title("Backup Name");
-                    if self.is_focus(Focus::BkpName) {
-                        if self.editing {
-                            block = block.border_style(Style::default().fg(Color::DarkGray));
-                        } else {
-                            block =
-                                block.style(Style::default().bg(Color::DarkGray).fg(Color::White));
-                        };
-                    }
+    fn concrete_bkp_page(&self, idx: ExplorerListItem, area: Rect, frame: &mut Frame) {
+        let [name_input_area, _] = Layout::vertical([
+            Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
+            Constraint::Fill(1),
+        ])
+        .areas(area);
 
-                    block
-                }),
-                name_input_area,
-            );
+        let (name_field, name_cursor) = if self.is_editing(Focus::BkpName) {
+            let cursor = self.bkp_name_field.cursor.clone();
+            (self.bkp_name_field.to_input_item(), Some(cursor))
         } else {
-            let [_, info_area, _] = Layout::vertical([
-                Constraint::Fill(1),
-                Constraint::Length(1),
-                Constraint::Fill(1),
-            ])
-            .areas(area);
+            let bkp_name = self.selected_bkp().unwrap().name();
+            (FieldItem::from_str(bkp_name), None)
+        };
 
-            let line = Line::from("no backup selected").centered();
-            frame.render_widget(line, info_area);
-        }
+        frame.render_widget(
+            name_field.set_cursor(name_cursor).block({
+                let mut block = Block::bordered().title("Backup Name");
+                if self.is_focus(Focus::BkpName) {
+                    if self.editing {
+                        block = block.border_style(Style::default().fg(Color::DarkGray));
+                    } else {
+                        block = block.style(Style::default().bg(Color::DarkGray).fg(Color::White));
+                    };
+                }
+
+                block
+            }),
+            name_input_area,
+        );
     }
 
     pub fn selected_bkp(&self) -> Option<&Bkp> {

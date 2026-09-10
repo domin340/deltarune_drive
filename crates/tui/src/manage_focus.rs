@@ -102,11 +102,9 @@ impl App {
                 UiAction::Down | UiAction::Tab => Focus::BkpDesc,
                 UiAction::Escape => Focus::ExplorerList,
                 UiAction::Enter => {
-                    let bkp_name = self.selected_bkp().unwrap().name();
-                    self.bkp_name_field.set_lines(vec![bkp_name.into()]);
-
                     self.editing = true;
-
+                    *self.bkp_name_field.line_mut(0).unwrap() =
+                        self.selected_bkp().unwrap().name().to_string();
                     Focus::BkpName
                 }
                 _ => Focus::BkpName,

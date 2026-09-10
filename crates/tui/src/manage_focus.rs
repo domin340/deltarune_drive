@@ -1,4 +1,4 @@
-use crate::{app::App, my_widgets::input_field::Field};
+use crate::app::App;
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -180,13 +180,13 @@ pub enum UiAction {
 impl UiAction {
     pub fn parse(code: KeyCode) -> Option<Self> {
         match code {
-            KeyCode::Right => Some(UiAction::Right),
-            KeyCode::Left => Some(UiAction::Left),
-            KeyCode::Up => Some(UiAction::Up),
-            KeyCode::Down => Some(UiAction::Down),
-            KeyCode::Enter => Some(UiAction::Enter),
-            KeyCode::Esc => Some(UiAction::Escape),
-            KeyCode::Tab => Some(UiAction::Tab),
+            KeyCode::Right => Some(Self::Right),
+            KeyCode::Left => Some(Self::Left),
+            KeyCode::Up => Some(Self::Up),
+            KeyCode::Down => Some(Self::Down),
+            KeyCode::Enter => Some(Self::Enter),
+            KeyCode::Esc => Some(Self::Escape),
+            KeyCode::Tab => Some(Self::Tab),
             _ => None,
         }
     }

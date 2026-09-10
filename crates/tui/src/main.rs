@@ -2,7 +2,6 @@ mod app;
 mod conf;
 mod manage_focus;
 mod my_widgets;
-mod popup;
 mod render;
 
 use crate::{

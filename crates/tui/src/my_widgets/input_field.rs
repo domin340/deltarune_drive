@@ -143,20 +143,28 @@ impl ToString for Field {
     }
 }
 
+fn line_lens(v: &Vec<String>) -> impl Iterator<Item = usize> {
+    v.iter().map(|s| s.chars().count())
+}
+
 impl Field {
     pub fn new(lines: Vec<String>) -> Self {
         if lines.is_empty() {
             panic!("lines mustn't be empty! at least a single element is required");
         }
 
-        let line_lens = lines.iter().map(|s| s.chars().count()).collect();
         Self {
+            line_lens: line_lens(&lines).collect(),
             lines,
-            line_lens,
             cursor: Cursor::default(),
             max_lines: usize::MAX,
             max_line_len: usize::MAX,
         }
+    }
+
+    pub fn set_lines(&mut self, lines: Vec<String>) {
+        self.lines = lines;
+        self.line_lens = line_lens(&self.lines).collect();
     }
 
     pub const fn set_max_lines(mut self, max_lines: usize) -> Self {

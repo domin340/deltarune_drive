@@ -119,12 +119,38 @@ impl HandledInputAction {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub struct Limits {
+    pub lines: usize,
+    pub len: usize,
+}
+
+impl Default for Limits {
+    fn default() -> Self {
+        Self {
+            lines: usize::MAX,
+            len: usize::MAX,
+        }
+    }
+}
+
+impl Limits {
+    pub const fn set_lines(mut self, lines: usize) -> Self {
+        self.lines = lines;
+        self
+    }
+
+    pub const fn set_len(mut self, len: usize) -> Self {
+        self.len = len;
+        self
+    }
+}
+
 #[derive(Debug)]
 pub struct Field {
     pub cursor: Cursor,
     pub lines: Vec<String>,
-    pub max_lines: usize,
-    pub max_line_len: usize,
+    pub limits: Limits,
     /// Cached char count per line, kept in sync with `lines`.
     /// Index-aligned with `lines` — line_lens[i] == lines[i].chars().count().
     line_lens: Vec<usize>,
@@ -157,8 +183,7 @@ impl Field {
             line_lens: line_lens(&lines).collect(),
             lines,
             cursor: Cursor::default(),
-            max_lines: usize::MAX,
-            max_line_len: usize::MAX,
+            limits: Limits::default(),
         }
     }
 
@@ -167,13 +192,8 @@ impl Field {
         self.line_lens = line_lens(&self.lines).collect();
     }
 
-    pub const fn set_max_lines(mut self, max_lines: usize) -> Self {
-        self.max_lines = max_lines;
-        self
-    }
-
-    pub const fn set_max_line_len(mut self, max_line_len: usize) -> Self {
-        self.max_line_len = max_line_len;
+    pub const fn set_limits(mut self, limits: Limits) -> Self {
+        self.limits = limits;
         self
     }
 
@@ -248,11 +268,11 @@ impl Field {
     }
 
     pub fn cursor_limit_y(&self) -> usize {
-        self.max_line_len.min(self.lines_count())
+        self.limits.lines.min(self.lines_count())
     }
 
     pub fn cursor_limit_x(&self) -> usize {
-        self.max_line_len.min(self.current_line_len())
+        self.limits.len.min(self.current_line_len())
     }
 
     pub fn cursor_to(&mut self, c: Cursor) {
@@ -279,7 +299,7 @@ impl Field {
     pub fn insert_char(&mut self, c: char) {
         let y = self.cursor.raw_y() as usize;
 
-        if self.max_line_len != 0 && self.line_lens[y] >= self.max_line_len {
+        if self.limits.len != 0 && self.line_lens[y] >= self.limits.len {
             return;
         }
 
@@ -326,7 +346,7 @@ impl Field {
     }
 
     pub fn insert_newline(&mut self) {
-        if self.max_lines != 0 && self.lines_count() >= self.max_lines {
+        if self.limits.lines != 0 && self.lines_count() >= self.limits.lines {
             return;
         }
 

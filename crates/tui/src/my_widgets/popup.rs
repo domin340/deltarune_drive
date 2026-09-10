@@ -1,8 +1,8 @@
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Style},
-    text::{Line, Text},
-    widgets::{Block, BorderType, StatefulWidget, Widget},
+    text::Line,
+    widgets::{StatefulWidget, Widget},
 };
 
 use crate::my_widgets::button::{Button, ButtonState, EqPad};
@@ -16,7 +16,7 @@ pub enum BinaryChoice {
 
 #[derive(Default, Debug)]
 pub struct NewBackupPopup {
-    pub selecting: BinaryChoice,
+    pub pick: BinaryChoice,
 }
 
 impl Widget for NewBackupPopup {
@@ -49,12 +49,12 @@ impl Widget for NewBackupPopup {
         Button::default().set_padding(EqPad::new(1, 0)).render(
             yes_btn_area,
             buf,
-            &mut ButtonState::default().set_focused(self.selecting == BinaryChoice::Yes),
+            &mut ButtonState::default().set_focused(self.pick == BinaryChoice::Yes),
         );
         Button::default().set_padding(EqPad::new(1, 0)).render(
             no_btn_area,
             buf,
-            &mut ButtonState::default().set_focused(self.selecting == BinaryChoice::No),
+            &mut ButtonState::default().set_focused(self.pick == BinaryChoice::No),
         );
     }
 }

@@ -2,6 +2,7 @@ mod app;
 mod conf;
 mod manage_focus;
 mod my_widgets;
+mod popup;
 mod render;
 
 use crate::{
@@ -55,7 +56,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
                             handle_input_action(&mut app, action)
                         }
                     } else if let Some(ui_action) = UiAction::parse(key.code) {
-                        app.exec_ui_action(ui_action);
+                        app.handle_ui_action(ui_action);
                     }
                 }
             }

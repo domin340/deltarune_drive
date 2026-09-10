@@ -48,7 +48,7 @@ impl App {
         self.conf.bkps().len().saturating_sub(1)
     }
 
-    pub fn exec_ui_action(&mut self, action: UiAction) {
+    pub fn handle_ui_action(&mut self, action: UiAction) {
         self.focus = match self.focus {
             Focus::ExplorerNew => match action {
                 UiAction::Up if !self.bkps_empty() => {

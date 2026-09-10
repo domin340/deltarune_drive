@@ -24,6 +24,10 @@ impl Widget for NewBackupPopup {
     where
         Self: Sized,
     {
+        if area.width < 14 || area.height < 5 {
+            panic!("new backup popup area size must at least be 14x5");
+        }
+
         buf.set_style(area, Style::default().bg(Color::DarkGray));
 
         let [_, label_area, _, buttons_area, _] = Layout::vertical([

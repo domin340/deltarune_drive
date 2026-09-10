@@ -102,9 +102,11 @@ impl App {
                 UiAction::Down | UiAction::Tab => Focus::BkpDesc,
                 UiAction::Escape => Focus::ExplorerList,
                 UiAction::Enter => {
-                    // FIXME: right now the field is reconstructed, this can be optimized.
-                    self.bkp_name_field = Field::from_str(self.selected_bkp().unwrap().name());
+                    let bkp_name = self.selected_bkp().unwrap().name();
+                    self.bkp_name_field.set_lines(vec![bkp_name.into()]);
+
                     self.editing = true;
+
                     Focus::BkpName
                 }
                 _ => Focus::BkpName,

@@ -97,24 +97,6 @@ impl From<Position> for Cursor {
     }
 }
 
-#[derive(Debug)]
-pub struct Field {
-    pub cursor: Cursor,
-    pub lines: Vec<String>,
-    pub max_lines: usize,
-    pub max_line_len: usize,
-    /// Cached char count per line, kept in sync with `lines`.
-    /// Index-aligned with `lines` — line_lens[i] == lines[i].chars().count().
-    line_lens: Vec<usize>,
-}
-
-impl Default for Field {
-    fn default() -> Self {
-        let lines = vec![String::new()];
-        Self::new(lines)
-    }
-}
-
 #[derive(Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HandledInputAction {
     pub confirm: bool,
@@ -134,6 +116,24 @@ impl HandledInputAction {
     pub fn set_confirm(mut self, confirm: bool) -> Self {
         self.confirm = confirm;
         self
+    }
+}
+
+#[derive(Debug)]
+pub struct Field {
+    pub cursor: Cursor,
+    pub lines: Vec<String>,
+    pub max_lines: usize,
+    pub max_line_len: usize,
+    /// Cached char count per line, kept in sync with `lines`.
+    /// Index-aligned with `lines` — line_lens[i] == lines[i].chars().count().
+    line_lens: Vec<usize>,
+}
+
+impl Default for Field {
+    fn default() -> Self {
+        let lines = vec![String::new()];
+        Self::new(lines)
     }
 }
 

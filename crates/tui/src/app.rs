@@ -1,4 +1,5 @@
 use crate::manage_focus::{ExplorerListItem, Focus};
+use crate::my_widgets::input_field::Limits;
 use crate::{conf::Conf, my_widgets::input_field::Field};
 
 pub const MAX_NAME_FIELD_LINES: usize = 1;
@@ -26,7 +27,8 @@ impl App {
         Self {
             conf: Conf::default(),
             focus: Focus::default(),
-            bkp_name_field: Field::default().set_max_lines(MAX_NAME_FIELD_LINES),
+            bkp_name_field: Field::default()
+                .set_limits(Limits::default().set_lines(MAX_NAME_FIELD_LINES)),
             bkp_desc_field: Field::default(),
             editing: false,
             list_item: None,

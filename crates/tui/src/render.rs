@@ -5,6 +5,7 @@ use crate::{
     my_widgets::{
         button::{Button, ButtonState},
         input_field::FieldItem,
+        popup::{NewBackupPopup, Popup, render_new_bkp_popup},
     },
 };
 use ratatui::{
@@ -95,6 +96,16 @@ impl App {
         }
 
         frame.render_widget(bkp_page_block, bkp_page_area);
+
+        if let Some(popup) = &self.popup {
+            let center_area = frame
+                .area()
+                .centered(Constraint::Percentage(50), Constraint::Percentage(50));
+
+            match popup {
+                Popup::NewBackup(popup) => render_new_bkp_popup(frame, center_area, popup),
+            }
+        }
     }
 
     fn bkp_list(&self, area: Rect, frame: &mut Frame) {

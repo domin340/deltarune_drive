@@ -1,4 +1,7 @@
-use crate::app::App;
+use crate::{
+    app::App,
+    my_widgets::popup::{BinaryChoice, NewBackupPopup, Popup},
+};
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -49,6 +52,19 @@ impl App {
     }
 
     pub fn handle_ui_action(&mut self, action: UiAction) {
+        if let Some(popup) = &mut self.popup {
+            match popup {
+                Popup::NewBackup(popup) => match action {
+                    UiAction::Left => popup.pick = BinaryChoice::Yes,
+                    UiAction::Right => popup.pick = BinaryChoice::No,
+                    UiAction::Escape => self.popup = None,
+                    _ => {}
+                },
+            };
+
+            return;
+        }
+
         self.focus = match self.focus {
             Focus::ExplorerNew => match action {
                 UiAction::Up if !self.bkps_empty() => {
@@ -59,7 +75,11 @@ impl App {
                     self.list_item = Some(0.into());
                     Focus::ExplorerList // beginning of the list
                 }
-                UiAction::Enter => todo!(), // enter popup
+                UiAction::Enter => {
+                    let popup = Popup::NewBackup(NewBackupPopup::default());
+                    self.popup = Some(popup);
+                    Focus::ExplorerNew
+                }
                 _ => Focus::ExplorerNew,
             },
             Focus::ExplorerList => match action {

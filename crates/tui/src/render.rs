@@ -90,13 +90,8 @@ impl App {
         };
 
         let content_bkp_page_area = bkp_page_block.inner(bkp_page_area);
-        if let Some(bkp_idx) = self.list_item {
-            self.concrete_bkp_page(bkp_idx, content_bkp_page_area, frame);
-        } else {
-            self.empty_bkp_page(content_bkp_page_area, frame);
-        }
-
         frame.render_widget(bkp_page_block, bkp_page_area);
+        self.bkp_page(content_bkp_page_area, frame);
 
         if let Some(popup) = &self.popup {
             let center_area = frame
@@ -138,7 +133,12 @@ impl App {
         frame.render_widget(line, info_area);
     }
 
-    fn concrete_bkp_page(&self, idx: ExplorerListItem, area: Rect, frame: &mut Frame) {
+    fn bkp_page(&self, area: Rect, frame: &mut Frame) {
+        if self.list_item.is_none() {
+            self.empty_bkp_page(area, frame);
+            return;
+        }
+
         let [name_input_area, _] = Layout::vertical([
             Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
             Constraint::Fill(1),

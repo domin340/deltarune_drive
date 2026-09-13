@@ -48,8 +48,8 @@ impl App {
         self.list_item.map(|item| item.idx())
     }
 
-    fn list_max_idx(&self) -> usize {
-        self.conf.bkps().len().saturating_sub(1)
+    fn last_list_item(&self) -> ExplorerListItem {
+        self.conf.bkps().len().saturating_sub(1).into()
     }
 
     pub fn handle_ui_action(&mut self, action: UiAction) {
@@ -93,7 +93,7 @@ impl App {
                     UiAction::Enter => {
                         if choice == &BinaryChoice::Yes {
                             let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
-                            let new_list_idx = self.add_new_bkp(new_bkp_name);
+                            let new_list_idx = self.create_bkp(new_bkp_name);
 
                             // switch focus to the new backup page
                             self.list_item = Some(new_list_idx.into());
@@ -108,6 +108,26 @@ impl App {
                     UiAction::Escape => self.popup = None,
                     _ => {}
                 },
+                Popup::DeleteBkp { choice } => match action {
+                    UiAction::Left => *choice = BinaryChoice::Yes,
+                    UiAction::Right => *choice = BinaryChoice::No,
+                    UiAction::Enter => {
+                        if choice == &BinaryChoice::Yes {
+                            let current_list_item = self.list_item.unwrap();
+                            self.delete_bkp(current_list_item.idx());
+
+                            self.list_item = if self.conf.bkps.is_empty() {
+                                None
+                            } else {
+                                Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
+                            };
+                        }
+
+                        self.popup = None;
+                    }
+                    UiAction::Escape => self.popup = None,
+                    _ => {}
+                },
             };
 
             return;
@@ -116,7 +136,7 @@ impl App {
         self.focus = match self.focus {
             Focus::ExplorerNew => match action {
                 UiAction::Up if !self.bkps_empty() => {
-                    self.list_item = Some(self.list_max_idx().into());
+                    self.list_item = Some(self.last_list_item());
                     Focus::ExplorerList // item above the new button
                 }
                 UiAction::Tab | UiAction::Down if !self.bkps_empty() => {
@@ -146,14 +166,21 @@ impl App {
                         Focus::ExplorerNew
                     }
                 }
+                UiAction::D => {
+                    self.popup = Some(Popup::DeleteBkp {
+                        choice: BinaryChoice::default(),
+                    });
+
+                    Focus::ExplorerList
+                }
                 UiAction::Down => {
                     if let Some(item) = self.list_item {
-                        let max_idx = self.list_max_idx();
-                        if item.idx() == max_idx {
+                        let last_idx = self.last_list_item().idx();
+                        if item.idx() == last_idx {
                             self.list_item = None;
                             Focus::ExplorerNew
                         } else {
-                            self.list_item = Some(item.next().min(max_idx.into()));
+                            self.list_item = Some(item.next().min(last_idx.into()));
                             Focus::ExplorerList
                         }
                     } else {
@@ -173,7 +200,7 @@ impl App {
                 UiAction::Escape => Focus::ExplorerList,
                 UiAction::Enter => {
                     self.editing = true;
-                    let bkp_name = self.selected_bkp().unwrap().name();
+                    let bkp_name = self.selected_bkp().name();
                     self.bkp_name_field.set_line(0, bkp_name.to_string());
                     Focus::BkpName
                 }
@@ -245,19 +272,24 @@ pub enum UiAction {
     Enter,
     Escape,
     Tab,
+    D,
 }
 
 impl UiAction {
     pub fn parse(code: KeyCode) -> Option<Self> {
-        match code {
-            KeyCode::Right => Some(Self::Right),
-            KeyCode::Left => Some(Self::Left),
-            KeyCode::Up => Some(Self::Up),
-            KeyCode::Down => Some(Self::Down),
-            KeyCode::Enter => Some(Self::Enter),
-            KeyCode::Esc => Some(Self::Escape),
-            KeyCode::Tab => Some(Self::Tab),
-            _ => None,
-        }
+        Some(match code {
+            KeyCode::Right => Self::Right,
+            KeyCode::Left => Self::Left,
+            KeyCode::Up => Self::Up,
+            KeyCode::Down => Self::Down,
+            KeyCode::Enter => Self::Enter,
+            KeyCode::Esc => Self::Escape,
+            KeyCode::Tab => Self::Tab,
+            KeyCode::Char(c) => match c {
+                'd' => Self::D,
+                _ => return None,
+            },
+            _ => return None,
+        })
     }
 }

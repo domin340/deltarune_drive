@@ -88,8 +88,8 @@ impl App {
         if let Some(popup) = &mut self.popup {
             match popup {
                 Popup::NewBkp { choice } => match process_binary_choice_popup(choice, action) {
-                    HandledBinaryChoice::Confirmed { pick } => {
-                        if pick {
+                    HandledBinaryChoice::Confirmed(choice) => {
+                        if choice == BinaryChoice::Yes {
                             let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
                             let new_list_idx = self.create_bkp(new_bkp_name);
 
@@ -108,8 +108,8 @@ impl App {
                     HandledBinaryChoice::None => {}
                 },
                 Popup::DeleteBkp { choice } => match process_binary_choice_popup(choice, action) {
-                    HandledBinaryChoice::Confirmed { pick } => {
-                        if pick {
+                    HandledBinaryChoice::Confirmed(choice) => {
+                        if choice == BinaryChoice::Yes {
                             let current_list_item = self.list_item.unwrap();
                             self.delete_bkp(current_list_item.idx());
 
@@ -262,7 +262,7 @@ impl App {
 }
 
 enum HandledBinaryChoice {
-    Confirmed { pick: bool },
+    Confirmed(BinaryChoice),
     FocusOnYes,
     FocusOnNo,
     None,
@@ -270,12 +270,9 @@ enum HandledBinaryChoice {
 
 fn process_binary_choice_popup(choice: &mut BinaryChoice, action: UiAction) -> HandledBinaryChoice {
     match action {
-        UiAction::Enter => {
-            let pick = choice == &BinaryChoice::Yes;
-            HandledBinaryChoice::Confirmed { pick }
-        }
-        UiAction::Y => HandledBinaryChoice::Confirmed { pick: true },
-        UiAction::N => HandledBinaryChoice::Confirmed { pick: false },
+        UiAction::Enter => HandledBinaryChoice::Confirmed(*choice),
+        UiAction::Y => HandledBinaryChoice::Confirmed(BinaryChoice::Yes),
+        UiAction::N => HandledBinaryChoice::Confirmed(BinaryChoice::No),
         UiAction::Left => HandledBinaryChoice::FocusOnYes,
         UiAction::Right => HandledBinaryChoice::FocusOnNo,
         _ => HandledBinaryChoice::None,

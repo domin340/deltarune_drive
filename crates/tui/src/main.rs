@@ -28,10 +28,10 @@ fn handle_input_action(app: &mut App, action: InputAction) {
                 app.editing = false;
 
                 let new_name = app.bkp_name_field.to_string();
-                app.selected_bkp_mut().map(|bkp| match bkp {
+                match app.selected_bkp_mut() {
                     Bkp::Unregistered(bkp) => bkp.name = new_name,
                     Bkp::Registered(bkp) => bkp.name = new_name,
-                });
+                };
             } else if !res.handled {
                 app.editing = false;
             }

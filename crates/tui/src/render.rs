@@ -12,7 +12,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
     style::{Color, Style},
-    text::Line,
+    text::{Line, Span},
     widgets::{Block, List, ListState},
 };
 
@@ -108,6 +108,17 @@ impl App {
                         &mut choice.clone(),
                     );
                 }
+                Popup::DeleteBkp { choice } => {
+                    let selected_bkp_name = self.selected_bkp().name();
+                    frame.render_stateful_widget(
+                        BinaryChoicePopup::new(Line::from(vec![
+                            "do you want to delete this backup: ".into(),
+                            selected_bkp_name.into(),
+                        ])),
+                        center_area,
+                        &mut choice.clone(),
+                    );
+                }
             }
         }
     }
@@ -134,50 +145,56 @@ impl App {
     }
 
     fn bkp_page(&self, area: Rect, frame: &mut Frame) {
-        if self.list_item.is_none() {
-            self.empty_bkp_page(area, frame);
-            return;
-        }
+        if let Some(item) = self.list_item {
+            let [name_input_area, _] = Layout::vertical([
+                Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
+                Constraint::Fill(1),
+            ])
+            .areas(area);
 
-        let [name_input_area, _] = Layout::vertical([
-            Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
-            Constraint::Fill(1),
-        ])
-        .areas(area);
+            let (name_field, name_cursor) = if self.is_editing(Focus::BkpName) {
+                let cursor = self.bkp_name_field.cursor.clone();
+                (self.bkp_name_field.to_input_item(), Some(cursor))
+            } else {
+                let bkp_name = self.get_bkp(item.idx()).unwrap().name();
+                (FieldItem::from_str(bkp_name), None)
+            };
 
-        let (name_field, name_cursor) = if self.is_editing(Focus::BkpName) {
-            let cursor = self.bkp_name_field.cursor.clone();
-            (self.bkp_name_field.to_input_item(), Some(cursor))
+            frame.render_widget(
+                name_field.set_cursor(name_cursor).block({
+                    let mut block = Block::bordered().title("Backup Name");
+                    if self.is_focus(Focus::BkpName) {
+                        if self.editing {
+                            block = block.border_style(Style::default().fg(Color::DarkGray));
+                        } else {
+                            block =
+                                block.style(Style::default().bg(Color::DarkGray).fg(Color::White));
+                        };
+                    }
+
+                    block
+                }),
+                name_input_area,
+            );
         } else {
-            let bkp_name = self.selected_bkp().unwrap().name();
-            (FieldItem::from_str(bkp_name), None)
-        };
-
-        frame.render_widget(
-            name_field.set_cursor(name_cursor).block({
-                let mut block = Block::bordered().title("Backup Name");
-                if self.is_focus(Focus::BkpName) {
-                    if self.editing {
-                        block = block.border_style(Style::default().fg(Color::DarkGray));
-                    } else {
-                        block = block.style(Style::default().bg(Color::DarkGray).fg(Color::White));
-                    };
-                }
-
-                block
-            }),
-            name_input_area,
-        );
+            self.empty_bkp_page(area, frame);
+        }
     }
 
-    pub fn selected_bkp(&self) -> Option<&Bkp> {
-        let idx = self.list_item_idx()?;
+    pub fn get_bkp(&self, idx: usize) -> Option<&Bkp> {
         self.conf.bkps.get(idx)
     }
 
-    pub fn selected_bkp_mut(&mut self) -> Option<&mut Bkp> {
-        let idx = self.list_item_idx()?;
+    pub fn get_bkp_mut(&mut self, idx: usize) -> Option<&mut Bkp> {
         self.conf.bkps.get_mut(idx)
+    }
+
+    pub fn selected_bkp(&self) -> &Bkp {
+        self.get_bkp(self.list_item.unwrap().idx()).unwrap()
+    }
+
+    pub fn selected_bkp_mut(&mut self) -> &mut Bkp {
+        self.get_bkp_mut(self.list_item.unwrap().idx()).unwrap()
     }
 
     fn bkp_names(&self) -> impl Iterator<Item = &str> {

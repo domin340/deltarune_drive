@@ -1,7 +1,7 @@
 use crate::{
     app::{App, MAX_NAME_FIELD_LINES, Popup},
     conf::Bkp,
-    manage_focus::{ExplorerListItem, Focus},
+    manage_focus::Focus,
     my_widgets::{
         button::{ButtonSimple, ButtonState},
         input_field::FieldItem,

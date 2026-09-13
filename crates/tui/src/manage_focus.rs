@@ -87,11 +87,9 @@ impl App {
 
         if let Some(popup) = &mut self.popup {
             match popup {
-                Popup::NewBkp { choice } => match action {
-                    UiAction::Left => *choice = BinaryChoice::Yes,
-                    UiAction::Right => *choice = BinaryChoice::No,
-                    UiAction::Enter => {
-                        if choice == &BinaryChoice::Yes {
+                Popup::NewBkp { choice } => match handle_binary_choice_popup(choice, action) {
+                    HandledBinaryChoice::Confirmed { pick } => {
+                        if pick {
                             let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
                             let new_list_idx = self.create_bkp(new_bkp_name);
 
@@ -105,14 +103,13 @@ impl App {
 
                         self.popup = None;
                     }
-                    UiAction::Escape => self.popup = None,
-                    _ => {}
+                    HandledBinaryChoice::FocusOnNo => *choice = BinaryChoice::No,
+                    HandledBinaryChoice::FocusOnYes => *choice = BinaryChoice::Yes,
+                    HandledBinaryChoice::None => {}
                 },
-                Popup::DeleteBkp { choice } => match action {
-                    UiAction::Left => *choice = BinaryChoice::Yes,
-                    UiAction::Right => *choice = BinaryChoice::No,
-                    UiAction::Enter => {
-                        if choice == &BinaryChoice::Yes {
+                Popup::DeleteBkp { choice } => match handle_binary_choice_popup(choice, action) {
+                    HandledBinaryChoice::Confirmed { pick } => {
+                        if pick {
                             let current_list_item = self.list_item.unwrap();
                             self.delete_bkp(current_list_item.idx());
 
@@ -125,8 +122,9 @@ impl App {
 
                         self.popup = None;
                     }
-                    UiAction::Escape => self.popup = None,
-                    _ => {}
+                    HandledBinaryChoice::FocusOnYes => *choice = BinaryChoice::Yes,
+                    HandledBinaryChoice::FocusOnNo => *choice = BinaryChoice::No,
+                    HandledBinaryChoice::None => {}
                 },
             };
 
@@ -263,6 +261,27 @@ impl App {
     }
 }
 
+enum HandledBinaryChoice {
+    Confirmed { pick: bool },
+    FocusOnYes,
+    FocusOnNo,
+    None,
+}
+
+fn handle_binary_choice_popup(choice: &mut BinaryChoice, action: UiAction) -> HandledBinaryChoice {
+    match action {
+        UiAction::Enter => {
+            let pick = choice == &BinaryChoice::Yes;
+            HandledBinaryChoice::Confirmed { pick }
+        }
+        UiAction::Y => HandledBinaryChoice::Confirmed { pick: true },
+        UiAction::N => HandledBinaryChoice::Confirmed { pick: false },
+        UiAction::Left => HandledBinaryChoice::FocusOnYes,
+        UiAction::Right => HandledBinaryChoice::FocusOnNo,
+        _ => HandledBinaryChoice::None,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum UiAction {
     Right,
@@ -272,7 +291,12 @@ pub enum UiAction {
     Enter,
     Escape,
     Tab,
+    /// Delete for short
     D,
+    /// Yes for short
+    Y,
+    /// No for short
+    N,
 }
 
 impl UiAction {
@@ -287,6 +311,8 @@ impl UiAction {
             KeyCode::Tab => Self::Tab,
             KeyCode::Char(c) => match c {
                 'd' => Self::D,
+                'y' => Self::Y,
+                'n' => Self::N,
                 _ => return None,
             },
             _ => return None,

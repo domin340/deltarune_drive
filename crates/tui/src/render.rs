@@ -111,10 +111,13 @@ impl App {
                 Popup::DeleteBkp { choice } => {
                     let selected_bkp_name = self.selected_bkp().name();
                     frame.render_stateful_widget(
-                        BinaryChoicePopup::new(Line::from(vec![
-                            "do you want to delete this backup: ".into(),
-                            selected_bkp_name.into(),
-                        ])),
+                        BinaryChoicePopup::new(
+                            Line::from(vec![
+                                "do you want to delete this backup: ".into(),
+                                selected_bkp_name.into(),
+                            ])
+                            .centered(),
+                        ),
                         center_area,
                         &mut choice.clone(),
                     );

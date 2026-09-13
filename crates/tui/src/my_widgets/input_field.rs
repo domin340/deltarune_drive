@@ -292,7 +292,7 @@ impl Field {
         );
     }
 
-    fn move_cursor(&mut self, dx: i32, dy: i32) {
+    pub fn move_cursor(&mut self, dx: i32, dy: i32) {
         let target = self.cursor.moved_by(dx, dy);
         self.cursor_to(target);
     }

@@ -272,7 +272,7 @@ fn process_binary_choice_popup(choice: &mut BinaryChoice, action: UiAction) -> H
     match action {
         UiAction::Enter => HandledBinaryChoice::Confirmed(*choice),
         UiAction::Y => HandledBinaryChoice::Confirmed(BinaryChoice::Yes),
-        UiAction::N => HandledBinaryChoice::Confirmed(BinaryChoice::No),
+        UiAction::N | UiAction::Escape => HandledBinaryChoice::Confirmed(BinaryChoice::No),
         UiAction::Left => HandledBinaryChoice::FocusOnYes,
         UiAction::Right => HandledBinaryChoice::FocusOnNo,
         _ => HandledBinaryChoice::None,

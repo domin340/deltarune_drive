@@ -1,7 +1,6 @@
 use ratatui::layout::{Position, Rect};
 
 pub mod button;
-pub mod button_simple;
 pub mod input_field;
 pub mod popup;
 

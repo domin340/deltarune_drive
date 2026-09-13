@@ -2,6 +2,7 @@ use crate::{
     app::App,
     my_widgets::popup::{BinaryChoice, NewBackupPopup, Popup},
 };
+use chrono::{DateTime, Utc};
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -89,6 +90,21 @@ impl App {
                 Popup::NewBackup(popup) => match action {
                     UiAction::Left => popup.pick = BinaryChoice::Yes,
                     UiAction::Right => popup.pick = BinaryChoice::No,
+                    UiAction::Enter => {
+                        if popup.pick == BinaryChoice::Yes {
+                            let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
+                            let new_list_idx = self.add_new_bkp(new_bkp_name);
+
+                            // switch focus to the new backup page
+                            self.list_item = Some(new_list_idx.into());
+                            self.focus = Focus::BkpName;
+                        }
+
+                        // otherwise stay where the focus were before.
+                        // close popup either way
+
+                        self.popup = None;
+                    }
                     UiAction::Escape => self.popup = None,
                     _ => {}
                 },

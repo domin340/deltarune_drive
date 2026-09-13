@@ -52,6 +52,38 @@ impl App {
     }
 
     pub fn handle_ui_action(&mut self, action: UiAction) {
+        /*
+        Idea:
+
+        handle_ui_key(&App, KeyEvent) -> UiAction {
+            { popup, foucs } = app
+            UiKey::parse(KeyEvent) ui_key {
+                if popup && ui_key == Enter && popup.pick == Yes {
+                    return UiAction::NewBkp {
+                        name: popup.name_field.to_string()
+                    }
+                }
+
+                if editing {
+                    return InputAction::parse(KeyEvent) action {
+                        UiAction::Input(action)
+                    }
+                }
+
+                match focus {
+                    Focus::BkpName { editing: false } && ui_key == Enter => {
+                        return UiAction::FocusOn(Focus::BkpName { editing: true })
+                    }
+                    ...
+                }
+
+                ...
+            }
+
+            ...
+        }
+        */
+
         if let Some(popup) = &mut self.popup {
             match popup {
                 Popup::NewBackup(popup) => match action {

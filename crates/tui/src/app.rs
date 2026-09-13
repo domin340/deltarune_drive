@@ -1,9 +1,14 @@
 use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
-use crate::my_widgets::{input_field::Limits, popup::Popup};
+use crate::my_widgets::input_field::Limits;
+use crate::my_widgets::popup::BinaryChoice;
 use crate::{conf::Conf, my_widgets::input_field::Field};
 
 pub const MAX_NAME_FIELD_LINES: usize = 1;
+
+pub enum Popup {
+    NewBkp { choice: BinaryChoice },
+}
 
 // FIXME: backup preview shouldn't allocate needlessly for fields when previewing items.
 pub struct App {

@@ -1,3 +1,4 @@
+use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
 use crate::my_widgets::{input_field::Limits, popup::Popup};
 use crate::{conf::Conf, my_widgets::input_field::Field};
@@ -47,5 +48,15 @@ impl App {
     /// Returns [`true`] when bkps list is emtpy
     pub fn bkps_empty(&self) -> bool {
         self.conf.bkps().len() == 0
+    }
+
+    /// Returns index to the backup
+    pub(crate) fn add_new_bkp(&mut self, name: String) -> usize {
+        let next_idx = self.conf.bkps.len();
+
+        let registered_bkp = Bkp::Registered(RegisteredBkp::with_name(name));
+        self.conf.bkps.push(registered_bkp);
+
+        next_idx
     }
 }

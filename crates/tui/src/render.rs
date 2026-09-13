@@ -12,7 +12,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
     style::{Color, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{Block, List, ListState},
 };
 

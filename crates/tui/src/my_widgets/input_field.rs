@@ -22,23 +22,21 @@ pub enum InputAction {
 
 impl InputAction {
     pub fn parse_event(e: KeyEvent) -> Option<InputAction> {
-        match e.code {
-            KeyCode::Enter if e.modifiers.contains(KeyModifiers::SHIFT) => {
-                Some(InputAction::Newline)
-            }
+        Some(match e.code {
+            KeyCode::Enter if e.modifiers.contains(KeyModifiers::SHIFT) => InputAction::Newline,
+            KeyCode::Char(c) => InputAction::Insert(c),
             code if e.modifiers.is_empty() => match code {
-                KeyCode::Enter => Some(InputAction::Confirm),
-                KeyCode::Esc => Some(InputAction::Escape),
-                KeyCode::Left => Some(InputAction::MoveLeft),
-                KeyCode::Right => Some(InputAction::MoveRight),
-                KeyCode::Down => Some(InputAction::MoveDown),
-                KeyCode::Up => Some(InputAction::MoveUp),
-                KeyCode::Backspace => Some(InputAction::DeleteChar),
-                KeyCode::Char(c) => Some(InputAction::Insert(c)),
-                _ => None,
+                KeyCode::Enter => InputAction::Confirm,
+                KeyCode::Esc => InputAction::Escape,
+                KeyCode::Left => InputAction::MoveLeft,
+                KeyCode::Right => InputAction::MoveRight,
+                KeyCode::Down => InputAction::MoveDown,
+                KeyCode::Up => InputAction::MoveUp,
+                KeyCode::Backspace => InputAction::DeleteChar,
+                _ => return None,
             },
-            _ => None,
-        }
+            _ => return None,
+        })
     }
 }
 

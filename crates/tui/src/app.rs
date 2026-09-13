@@ -8,6 +8,7 @@ pub const MAX_NAME_FIELD_LINES: usize = 1;
 
 pub enum Popup {
     NewBkp { choice: BinaryChoice },
+    DeleteBkp { choice: BinaryChoice },
 }
 
 // FIXME: backup preview shouldn't allocate needlessly for fields when previewing items.
@@ -56,12 +57,16 @@ impl App {
     }
 
     /// Returns index to the backup
-    pub(crate) fn add_new_bkp(&mut self, name: String) -> usize {
+    pub(crate) fn create_bkp(&mut self, name: String) -> usize {
         let next_idx = self.conf.bkps.len();
 
         let registered_bkp = Bkp::Registered(RegisteredBkp::with_name(name));
         self.conf.bkps.push(registered_bkp);
 
         next_idx
+    }
+
+    pub(crate) fn delete_bkp(&mut self, idx: usize) {
+        self.conf.bkps.remove(idx);
     }
 }

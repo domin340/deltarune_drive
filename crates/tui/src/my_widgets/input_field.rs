@@ -245,15 +245,6 @@ impl Field {
         self.lines.get(idx).map(String::as_str)
     }
 
-    fn current_line_mut(&mut self) -> &mut String {
-        let idx = self.cursor.raw_y() as usize;
-        &mut self.lines[idx]
-    }
-
-    fn line_mut(&mut self, idx: usize) -> Option<&mut String> {
-        self.lines.get_mut(idx)
-    }
-
     pub const fn lines_count(&self) -> usize {
         self.lines.len()
     }

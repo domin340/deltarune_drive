@@ -6,7 +6,7 @@ use ratatui::{
     widgets::Clear,
 };
 
-use crate::my_widgets::button::{Button, ButtonState};
+use crate::my_widgets::button::{ButtonSimple, ButtonState};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BinaryChoice {
@@ -47,14 +47,18 @@ pub fn render_new_bkp_popup(frame: &mut Frame, area: Rect, state: &NewBackupPopu
     ])
     .areas(buttons_area);
 
+    let btn_focus_style = Style::default().bg(Color::DarkGray).fg(Color::White);
     frame.render_stateful_widget(
-        Button::new(Line::from("yes").centered()),
+        ButtonSimple::new(Line::from("yes").centered())
+            .focus_style(btn_focus_style)
+            .set_min_x_pad(1),
         yes_btn_area,
         &mut ButtonState::default().set_focused(state.pick == BinaryChoice::Yes),
     );
-
     frame.render_stateful_widget(
-        Button::new(Line::from("no").centered()),
+        ButtonSimple::new(Line::from("no").centered())
+            .focus_style(btn_focus_style)
+            .set_min_x_pad(1),
         no_btn_area,
         &mut ButtonState::default().set_focused(state.pick == BinaryChoice::No),
     );

@@ -231,6 +231,19 @@ impl Field {
         )
     }
 
+    pub fn set_line(&mut self, idx: usize, s: impl Into<String>) {
+        if idx >= self.lines.len() {
+            let line_count = self.lines.len();
+            panic!("index must be in range: 0<{line_count} but {idx} given.");
+        }
+
+        let s = s.into();
+        let char_count = s.chars().count();
+        *self.line_mut(idx).unwrap() = s;
+
+        self.line_lens[idx] = char_count;
+    }
+
     pub fn current_line(&self) -> &str {
         let idx = self.cursor.raw_y() as usize;
         self.lines[idx].as_str()
@@ -240,12 +253,12 @@ impl Field {
         self.lines.get(idx).map(String::as_str)
     }
 
-    pub fn current_line_mut(&mut self) -> &mut String {
+    fn current_line_mut(&mut self) -> &mut String {
         let idx = self.cursor.raw_y() as usize;
         &mut self.lines[idx]
     }
 
-    pub fn line_mut(&mut self, idx: usize) -> Option<&mut String> {
+    fn line_mut(&mut self, idx: usize) -> Option<&mut String> {
         self.lines.get_mut(idx)
     }
 

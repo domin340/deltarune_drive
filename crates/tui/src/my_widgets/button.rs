@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{StatefulWidget, Widget},
 };
 
-use crate::my_widgets::CornerIndices;
+use crate::my_widgets::Corners;
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct EqPad {
@@ -86,12 +86,12 @@ impl StatefulWidget for Button<'_> {
             return;
         }
 
-        let CornerIndices {
+        let Corners {
             top_left,
             top_right,
             bottom_left,
             bottom_right,
-        } = CornerIndices::from(area);
+        } = Corners::from(area);
 
         let (base_style, border_style) = if state.focused {
             (

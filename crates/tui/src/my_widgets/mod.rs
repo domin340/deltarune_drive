@@ -5,14 +5,14 @@ pub mod input_field;
 pub mod popup;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CornerIndices {
+pub struct Corners {
     pub top_left: Position,
     pub top_right: Position,
     pub bottom_left: Position,
     pub bottom_right: Position,
 }
 
-impl From<Rect> for CornerIndices {
+impl From<Rect> for Corners {
     fn from(rect: Rect) -> Self {
         let x_right_idx = rect.x + rect.width - 1;
         let y_bottom_idx = rect.y + rect.height - 1;

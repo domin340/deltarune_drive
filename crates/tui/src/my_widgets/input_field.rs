@@ -274,18 +274,22 @@ impl Field {
         self.line_lens[self.cursor.raw_y() as usize]
     }
 
-    pub fn cursor_limit_y(&self) -> usize {
-        self.limits.lines.min(self.lines_count())
+    pub fn cursor_limit_y(&self) -> u16 {
+        let last_idx = self.lines_count().saturating_sub(1);
+        self.limits.lines.min(last_idx).min(u16::MAX as usize) as u16
     }
 
-    pub fn cursor_limit_x(&self) -> usize {
-        self.limits.len.min(self.current_line_len())
+    pub fn cursor_limit_x(&self) -> u16 {
+        let last_idx = self.current_line_len();
+        self.limits.len.min(last_idx).min(u16::MAX as usize) as u16
     }
 
     pub fn cursor_to(&mut self, c: Cursor) {
-        let x_bound = self.cursor_limit_x().min(u16::MAX as usize) as u16;
-        let y_bound = self.cursor_limit_y().min(u16::MAX as usize) as u16;
-        self.cursor = Cursor::new(c.x().min(x_bound), c.y().min(y_bound))
+        // bind the new cursor to limits
+        self.cursor = Cursor::new(
+            c.x().min(self.cursor_limit_x()),
+            c.y().min(self.cursor_limit_y()),
+        );
     }
 
     fn move_cursor(&mut self, dx: i32, dy: i32) {

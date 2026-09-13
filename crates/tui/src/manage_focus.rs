@@ -123,8 +123,8 @@ impl App {
                 UiAction::Escape => Focus::ExplorerList,
                 UiAction::Enter => {
                     self.editing = true;
-                    *self.bkp_name_field.line_mut(0).unwrap() =
-                        self.selected_bkp().unwrap().name().to_string();
+                    let bkp_name = self.selected_bkp().unwrap().name();
+                    self.bkp_name_field.set_line(0, bkp_name.to_string());
                     Focus::BkpName
                 }
                 _ => Focus::BkpName,

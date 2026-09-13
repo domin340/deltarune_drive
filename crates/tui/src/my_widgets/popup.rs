@@ -55,7 +55,7 @@ impl StatefulWidget for BinaryChoicePopup<'_> {
         .areas(buttons_area);
 
         let btn_focus_style = Style::default().bg(Color::DarkGray).fg(Color::White);
-        let yes_picked = *state == BinaryChoice::Yes;
+        let yes_picked = state == &BinaryChoice::Yes;
 
         ButtonSimple::new(Line::from("yes").centered())
             .focus_style(btn_focus_style)

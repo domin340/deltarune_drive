@@ -1,8 +1,8 @@
 use crate::{
-    app::App,
-    my_widgets::popup::{BinaryChoice, NewBackupPopup, Popup},
+    app::{App, Popup},
+    my_widgets::popup::BinaryChoice,
 };
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -87,11 +87,11 @@ impl App {
 
         if let Some(popup) = &mut self.popup {
             match popup {
-                Popup::NewBackup(popup) => match action {
-                    UiAction::Left => popup.pick = BinaryChoice::Yes,
-                    UiAction::Right => popup.pick = BinaryChoice::No,
+                Popup::NewBkp { choice } => match action {
+                    UiAction::Left => *choice = BinaryChoice::Yes,
+                    UiAction::Right => *choice = BinaryChoice::No,
                     UiAction::Enter => {
-                        if popup.pick == BinaryChoice::Yes {
+                        if choice == &BinaryChoice::Yes {
                             let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
                             let new_list_idx = self.add_new_bkp(new_bkp_name);
 
@@ -124,7 +124,9 @@ impl App {
                     Focus::ExplorerList // beginning of the list
                 }
                 UiAction::Enter => {
-                    let popup = Popup::NewBackup(NewBackupPopup::default());
+                    let popup = Popup::NewBkp {
+                        choice: BinaryChoice::default(),
+                    };
                     self.popup = Some(popup);
                     Focus::ExplorerNew
                 }

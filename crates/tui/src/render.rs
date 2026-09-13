@@ -1,11 +1,11 @@
 use crate::{
-    app::{App, MAX_NAME_FIELD_LINES},
+    app::{App, MAX_NAME_FIELD_LINES, Popup},
     conf::Bkp,
     manage_focus::{ExplorerListItem, Focus},
     my_widgets::{
         button::{ButtonSimple, ButtonState},
         input_field::FieldItem,
-        popup::{Popup, render_new_bkp_popup},
+        popup::{BinaryChoice, BinaryChoicePopup},
     },
 };
 use ratatui::{
@@ -104,7 +104,15 @@ impl App {
                 .centered(Constraint::Percentage(50), Constraint::Percentage(50));
 
             match popup {
-                Popup::NewBackup(popup) => render_new_bkp_popup(frame, center_area, popup),
+                Popup::NewBkp { choice } => {
+                    frame.render_stateful_widget(
+                        BinaryChoicePopup::new(
+                            Line::from("create a new backup from deltarune files?").centered(),
+                        ),
+                        center_area,
+                        &mut choice.clone(),
+                    );
+                }
             }
         }
     }

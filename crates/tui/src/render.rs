@@ -3,9 +3,9 @@ use crate::{
     conf::Bkp,
     manage_focus::{ExplorerListItem, Focus},
     my_widgets::{
-        button::{Button, ButtonSimple, ButtonState},
+        button::{ButtonSimple, ButtonState},
         input_field::FieldItem,
-        popup::{NewBackupPopup, Popup, render_new_bkp_popup},
+        popup::{Popup, render_new_bkp_popup},
     },
 };
 use ratatui::{

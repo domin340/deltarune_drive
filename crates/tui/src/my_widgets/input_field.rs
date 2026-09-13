@@ -232,15 +232,9 @@ impl Field {
     }
 
     pub fn set_line(&mut self, idx: usize, s: impl Into<String>) {
-        if idx >= self.lines.len() {
-            let line_count = self.lines.len();
-            panic!("index must be in range: 0<{line_count} but {idx} given.");
-        }
-
         let s = s.into();
         let char_count = s.chars().count();
-        *self.line_mut(idx).unwrap() = s;
-
+        self.lines[idx] = s;
         self.line_lens[idx] = char_count;
     }
 

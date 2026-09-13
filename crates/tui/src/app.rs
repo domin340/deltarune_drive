@@ -57,7 +57,7 @@ impl App {
     }
 
     /// Returns index to the backup
-    pub(crate) fn create_bkp(&mut self, name: String) -> usize {
+    pub(crate) fn create_registered_bkp(&mut self, name: String) -> usize {
         let next_idx = self.conf.bkps.len();
 
         let registered_bkp = Bkp::Registered(RegisteredBkp::with_name(name));

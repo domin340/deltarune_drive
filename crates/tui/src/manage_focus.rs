@@ -91,7 +91,7 @@ impl App {
                     HandledBinaryChoice::Confirmed(choice) => {
                         if choice == BinaryChoice::Yes {
                             let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
-                            let new_list_idx = self.create_bkp(new_bkp_name);
+                            let new_list_idx = self.create_registered_bkp(new_bkp_name);
 
                             // switch focus to the new backup page
                             self.list_item = Some(new_list_idx.into());

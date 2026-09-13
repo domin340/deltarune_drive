@@ -5,7 +5,7 @@ use crate::{
     my_widgets::{
         button::{ButtonSimple, ButtonState},
         input_field::FieldItem,
-        popup::{BinaryChoice, BinaryChoicePopup},
+        popup::BinaryChoicePopup,
     },
 };
 use ratatui::{

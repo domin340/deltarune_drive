@@ -1,11 +1,12 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Color, Style},
     text::Line,
-    widgets::{StatefulWidget, Widget},
+    widgets::Clear,
 };
 
-use crate::my_widgets::button::{Button, ButtonState, EqPad};
+use crate::my_widgets::button::{Button, ButtonState};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BinaryChoice {
@@ -19,48 +20,44 @@ pub struct NewBackupPopup {
     pub pick: BinaryChoice,
 }
 
-impl Widget for NewBackupPopup {
-    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer)
-    where
-        Self: Sized,
-    {
-        if area.width < 14 || area.height < 5 {
-            panic!("new backup popup area size must at least be 14x5");
-        }
+pub fn render_new_bkp_popup(frame: &mut Frame, area: Rect, state: &NewBackupPopup) {
+    frame.render_widget(Clear, area);
+    frame
+        .buffer_mut()
+        .set_style(area, Style::default().fg(Color::Reset).bg(Color::Blue));
 
-        buf.set_style(area, Style::default().bg(Color::DarkGray));
+    let [_, label_area, _, buttons_area, _] = Layout::vertical([
+        Constraint::Fill(1),
+        Constraint::Length(1),
+        Constraint::Length(1),
+        Constraint::Length(3),
+        Constraint::Fill(1),
+    ])
+    .areas(area);
 
-        let [_, label_area, _, buttons_area, _] = Layout::vertical([
-            Constraint::Fill(1),   // gap
-            Constraint::Length(1), // label
-            Constraint::Length(1), // space
-            Constraint::Length(3), // buttons
-            Constraint::Fill(1),   // gap
-        ])
-        .areas(area);
+    let label_text = "create new backup from files?";
+    frame.render_widget(Line::from(label_text).centered(), label_area);
 
-        Line::from("Create new backup from files?").render(label_area, buf);
+    let [_, yes_btn_area, _, no_btn_area, _] = Layout::horizontal([
+        Constraint::Fill(1),
+        Constraint::Length(16),
+        Constraint::Length(2),
+        Constraint::Length(16),
+        Constraint::Fill(1),
+    ])
+    .areas(buttons_area);
 
-        let [_, yes_btn_area, _, no_btn_area, _] = Layout::horizontal([
-            Constraint::Fill(1),   // gap
-            Constraint::Length(7), // yes btn
-            Constraint::Length(2), // space
-            Constraint::Length(7), // no btn
-            Constraint::Fill(1),   // gap
-        ])
-        .areas(buttons_area);
+    frame.render_stateful_widget(
+        Button::new(Line::from("yes").centered()),
+        yes_btn_area,
+        &mut ButtonState::default().set_focused(state.pick == BinaryChoice::Yes),
+    );
 
-        Button::default().set_padding(EqPad::new(1, 0)).render(
-            yes_btn_area,
-            buf,
-            &mut ButtonState::default().set_focused(self.pick == BinaryChoice::Yes),
-        );
-        Button::default().set_padding(EqPad::new(1, 0)).render(
-            no_btn_area,
-            buf,
-            &mut ButtonState::default().set_focused(self.pick == BinaryChoice::No),
-        );
-    }
+    frame.render_stateful_widget(
+        Button::new(Line::from("no").centered()),
+        no_btn_area,
+        &mut ButtonState::default().set_focused(state.pick == BinaryChoice::No),
+    );
 }
 
 pub enum Popup {

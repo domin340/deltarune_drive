@@ -7,7 +7,7 @@ use ratatui::{
 
 use crate::my_widgets::CornerIndices;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct EqPad {
     x: u16,
     y: u16,
@@ -58,7 +58,7 @@ impl Default for Button<'_> {
     fn default() -> Self {
         Self {
             line: "".into(),
-            padding: EqPad::from(1),
+            padding: EqPad::default(),
         }
     }
 }
@@ -67,7 +67,6 @@ impl<'a> Button<'a> {
     pub fn new(line: impl Into<Line<'a>>) -> Self {
         Self {
             line: line.into(),
-            padding: EqPad::from(1),
             ..Default::default()
         }
     }
@@ -94,23 +93,24 @@ impl StatefulWidget for Button<'_> {
             bottom_right,
         } = CornerIndices::from(area);
 
-        let (border, bg, fg) = if state.focused {
-            (Color::Gray, Color::DarkGray, Color::White)
+        let (base_style, border_style) = if state.focused {
+            (
+                Style::default().fg(Color::White).bg(Color::DarkGray),
+                Style::default().fg(Color::Gray).bg(Color::DarkGray),
+            )
         } else {
-            (Color::Reset, Color::Reset, Color::Reset)
+            (Style::default(), Style::default())
         };
 
-        let base_style = Style::default().fg(fg).bg(bg);
         buf.set_style(area, base_style);
 
-        let border_style = Style::default().fg(border).bg(bg);
         buf[top_left].set_char('╭').set_style(border_style);
         buf[top_right].set_char('╮').set_style(border_style);
         buf[bottom_left].set_char('╰').set_style(border_style);
         buf[bottom_right].set_char('╯').set_style(border_style);
 
         if area.width > 2 {
-            for x in inner.x..top_right.x {
+            for x in (inner.x + 1)..top_right.x {
                 buf[(x, top_left.y)].set_char('─').set_style(border_style);
                 buf[(x, bottom_left.y)]
                     .set_char('─')
@@ -119,7 +119,7 @@ impl StatefulWidget for Button<'_> {
         }
 
         if area.height > 2 {
-            for y in inner.y..bottom_left.y {
+            for y in (inner.y + 1)..bottom_left.y {
                 buf[(top_left.x, y)].set_char('│').set_style(border_style);
                 buf[(top_right.x, y)].set_char('│').set_style(border_style);
             }
@@ -135,5 +135,55 @@ impl StatefulWidget for Button<'_> {
                 .style(base_style)
                 .render(Rect::new(x, y, line_width.min(inner.width), 1), buf);
         }
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct ButtonSimple<'t> {
+    line: Line<'t>,
+    min_x_pad: u16,
+    focus_style: Option<Style>,
+}
+
+impl<'t> ButtonSimple<'t> {
+    pub fn new(line: impl Into<Line<'t>>) -> Self {
+        Self {
+            line: line.into(),
+            focus_style: None,
+            min_x_pad: 0,
+        }
+    }
+
+    pub const fn focus_style(mut self, style: Style) -> Self {
+        self.focus_style = Some(style);
+        self
+    }
+
+    pub const fn set_min_x_pad(mut self, x_pad: u16) -> Self {
+        self.min_x_pad = x_pad;
+        self
+    }
+}
+
+impl StatefulWidget for ButtonSimple<'_> {
+    type State = ButtonState;
+
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State) {
+        buf[(area.x, area.y)].set_char('[');
+        buf[(area.x + area.width - 1, area.y)].set_char(']');
+
+        if state.focused
+            && let Some(focus_style) = self.focus_style
+        {
+            buf.set_style(Rect { height: 1, ..area }, focus_style);
+        }
+
+        let line_area = Rect {
+            x: area.x + self.min_x_pad + 1,
+            width: area.width - self.min_x_pad - 1,
+            ..area
+        };
+
+        self.line.render(line_area, buf);
     }
 }

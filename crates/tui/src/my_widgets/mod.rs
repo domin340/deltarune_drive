@@ -2,6 +2,7 @@ use ratatui::layout::{Position, Rect};
 
 pub mod button;
 pub mod input_field;
+pub mod popup;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CornerIndices {

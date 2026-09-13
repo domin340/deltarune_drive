@@ -1,4 +1,8 @@
-use crate::{app::App, my_widgets::input_field::Field};
+use crate::{
+    app::App,
+    my_widgets::popup::{BinaryChoice, NewBackupPopup, Popup},
+};
+use chrono::{DateTime, Utc};
 use crossterm::event::KeyCode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -48,7 +52,67 @@ impl App {
         self.conf.bkps().len().saturating_sub(1)
     }
 
-    pub fn exec_ui_action(&mut self, action: UiAction) {
+    pub fn handle_ui_action(&mut self, action: UiAction) {
+        /*
+        Idea:
+
+        handle_ui_key(&App, KeyEvent) -> UiAction {
+            { popup, foucs } = app
+            UiKey::parse(KeyEvent) ui_key {
+                if popup && ui_key == Enter && popup.pick == Yes {
+                    return UiAction::NewBkp {
+                        name: popup.name_field.to_string()
+                    }
+                }
+
+                if editing {
+                    return InputAction::parse(KeyEvent) action {
+                        UiAction::Input(action)
+                    }
+                }
+
+                match focus {
+                    Focus::BkpName { editing: false } && ui_key == Enter => {
+                        return UiAction::FocusOn(Focus::BkpName { editing: true })
+                    }
+                    ...
+                }
+
+                ...
+            }
+
+            ...
+        }
+        */
+
+        if let Some(popup) = &mut self.popup {
+            match popup {
+                Popup::NewBackup(popup) => match action {
+                    UiAction::Left => popup.pick = BinaryChoice::Yes,
+                    UiAction::Right => popup.pick = BinaryChoice::No,
+                    UiAction::Enter => {
+                        if popup.pick == BinaryChoice::Yes {
+                            let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
+                            let new_list_idx = self.add_new_bkp(new_bkp_name);
+
+                            // switch focus to the new backup page
+                            self.list_item = Some(new_list_idx.into());
+                            self.focus = Focus::BkpName;
+                        }
+
+                        // otherwise stay where the focus were before.
+                        // close popup either way
+
+                        self.popup = None;
+                    }
+                    UiAction::Escape => self.popup = None,
+                    _ => {}
+                },
+            };
+
+            return;
+        }
+
         self.focus = match self.focus {
             Focus::ExplorerNew => match action {
                 UiAction::Up if !self.bkps_empty() => {
@@ -59,7 +123,11 @@ impl App {
                     self.list_item = Some(0.into());
                     Focus::ExplorerList // beginning of the list
                 }
-                UiAction::Enter => todo!(), // enter popup
+                UiAction::Enter => {
+                    let popup = Popup::NewBackup(NewBackupPopup::default());
+                    self.popup = Some(popup);
+                    Focus::ExplorerNew
+                }
                 _ => Focus::ExplorerNew,
             },
             Focus::ExplorerList => match action {
@@ -103,8 +171,8 @@ impl App {
                 UiAction::Escape => Focus::ExplorerList,
                 UiAction::Enter => {
                     self.editing = true;
-                    *self.bkp_name_field.line_mut(0).unwrap() =
-                        self.selected_bkp().unwrap().name().to_string();
+                    let bkp_name = self.selected_bkp().unwrap().name();
+                    self.bkp_name_field.set_line(0, bkp_name.to_string());
                     Focus::BkpName
                 }
                 _ => Focus::BkpName,
@@ -180,13 +248,13 @@ pub enum UiAction {
 impl UiAction {
     pub fn parse(code: KeyCode) -> Option<Self> {
         match code {
-            KeyCode::Right => Some(UiAction::Right),
-            KeyCode::Left => Some(UiAction::Left),
-            KeyCode::Up => Some(UiAction::Up),
-            KeyCode::Down => Some(UiAction::Down),
-            KeyCode::Enter => Some(UiAction::Enter),
-            KeyCode::Esc => Some(UiAction::Escape),
-            KeyCode::Tab => Some(UiAction::Tab),
+            KeyCode::Right => Some(Self::Right),
+            KeyCode::Left => Some(Self::Left),
+            KeyCode::Up => Some(Self::Up),
+            KeyCode::Down => Some(Self::Down),
+            KeyCode::Enter => Some(Self::Enter),
+            KeyCode::Esc => Some(Self::Escape),
+            KeyCode::Tab => Some(Self::Tab),
             _ => None,
         }
     }

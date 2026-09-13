@@ -55,7 +55,7 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
                             handle_input_action(&mut app, action)
                         }
                     } else if let Some(ui_action) = UiAction::parse(key.code) {
-                        app.exec_ui_action(ui_action);
+                        app.handle_ui_action(ui_action);
                     }
                 }
             }

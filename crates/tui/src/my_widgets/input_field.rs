@@ -22,23 +22,21 @@ pub enum InputAction {
 
 impl InputAction {
     pub fn parse_event(e: KeyEvent) -> Option<InputAction> {
-        match e.code {
-            KeyCode::Enter if e.modifiers.contains(KeyModifiers::SHIFT) => {
-                Some(InputAction::Newline)
-            }
+        Some(match e.code {
+            KeyCode::Enter if e.modifiers.contains(KeyModifiers::SHIFT) => InputAction::Newline,
+            KeyCode::Char(c) => InputAction::Insert(c),
             code if e.modifiers.is_empty() => match code {
-                KeyCode::Enter => Some(InputAction::Confirm),
-                KeyCode::Esc => Some(InputAction::Escape),
-                KeyCode::Left => Some(InputAction::MoveLeft),
-                KeyCode::Right => Some(InputAction::MoveRight),
-                KeyCode::Down => Some(InputAction::MoveDown),
-                KeyCode::Up => Some(InputAction::MoveUp),
-                KeyCode::Backspace => Some(InputAction::DeleteChar),
-                KeyCode::Char(c) => Some(InputAction::Insert(c)),
-                _ => None,
+                KeyCode::Enter => InputAction::Confirm,
+                KeyCode::Esc => InputAction::Escape,
+                KeyCode::Left => InputAction::MoveLeft,
+                KeyCode::Right => InputAction::MoveRight,
+                KeyCode::Down => InputAction::MoveDown,
+                KeyCode::Up => InputAction::MoveUp,
+                KeyCode::Backspace => InputAction::DeleteChar,
+                _ => return None,
             },
-            _ => None,
-        }
+            _ => return None,
+        })
     }
 }
 
@@ -231,6 +229,13 @@ impl Field {
         )
     }
 
+    pub fn set_line(&mut self, idx: usize, s: impl Into<String>) {
+        let s = s.into();
+        let char_count = s.chars().count();
+        self.lines[idx] = s;
+        self.line_lens[idx] = char_count;
+    }
+
     pub fn current_line(&self) -> &str {
         let idx = self.cursor.raw_y() as usize;
         self.lines[idx].as_str()
@@ -240,12 +245,12 @@ impl Field {
         self.lines.get(idx).map(String::as_str)
     }
 
-    pub fn current_line_mut(&mut self) -> &mut String {
+    fn current_line_mut(&mut self) -> &mut String {
         let idx = self.cursor.raw_y() as usize;
         &mut self.lines[idx]
     }
 
-    pub fn line_mut(&mut self, idx: usize) -> Option<&mut String> {
+    fn line_mut(&mut self, idx: usize) -> Option<&mut String> {
         self.lines.get_mut(idx)
     }
 
@@ -267,21 +272,25 @@ impl Field {
         self.line_lens[self.cursor.raw_y() as usize]
     }
 
-    pub fn cursor_limit_y(&self) -> usize {
-        self.limits.lines.min(self.lines_count())
+    pub fn cursor_limit_y(&self) -> u16 {
+        let last_idx = self.lines_count().saturating_sub(1);
+        self.limits.lines.min(last_idx).min(u16::MAX as usize) as u16
     }
 
-    pub fn cursor_limit_x(&self) -> usize {
-        self.limits.len.min(self.current_line_len())
+    pub fn cursor_limit_x(&self) -> u16 {
+        let last_idx = self.current_line_len();
+        self.limits.len.min(last_idx).min(u16::MAX as usize) as u16
     }
 
     pub fn cursor_to(&mut self, c: Cursor) {
-        let x_bound = self.cursor_limit_x().min(u16::MAX as usize) as u16;
-        let y_bound = self.cursor_limit_y().min(u16::MAX as usize) as u16;
-        self.cursor = Cursor::new(c.x().min(x_bound), c.y().min(y_bound))
+        // bind the new cursor to limits
+        self.cursor = Cursor::new(
+            c.x().min(self.cursor_limit_x()),
+            c.y().min(self.cursor_limit_y()),
+        );
     }
 
-    fn move_cursor(&mut self, dx: i32, dy: i32) {
+    pub fn move_cursor(&mut self, dx: i32, dy: i32) {
         let target = self.cursor.moved_by(dx, dy);
         self.cursor_to(target);
     }

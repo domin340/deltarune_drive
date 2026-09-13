@@ -1,5 +1,6 @@
+use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
-use crate::my_widgets::input_field::Limits;
+use crate::my_widgets::{input_field::Limits, popup::Popup};
 use crate::{conf::Conf, my_widgets::input_field::Field};
 
 pub const MAX_NAME_FIELD_LINES: usize = 1;
@@ -14,6 +15,7 @@ pub struct App {
     /// NOTE: can be set by [`State::exec_ui_action`] usually by pressing enter
     pub editing: bool,
     pub list_item: Option<ExplorerListItem>,
+    pub popup: Option<Popup>,
 }
 
 impl Default for App {
@@ -32,6 +34,7 @@ impl App {
             bkp_desc_field: Field::default(),
             editing: false,
             list_item: None,
+            popup: None,
         }
     }
 
@@ -45,5 +48,15 @@ impl App {
     /// Returns [`true`] when bkps list is emtpy
     pub fn bkps_empty(&self) -> bool {
         self.conf.bkps().len() == 0
+    }
+
+    /// Returns index to the backup
+    pub(crate) fn add_new_bkp(&mut self, name: String) -> usize {
+        let next_idx = self.conf.bkps.len();
+
+        let registered_bkp = Bkp::Registered(RegisteredBkp::with_name(name));
+        self.conf.bkps.push(registered_bkp);
+
+        next_idx
     }
 }

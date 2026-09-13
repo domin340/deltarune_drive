@@ -3,8 +3,9 @@ use crate::{
     conf::Bkp,
     manage_focus::{ExplorerListItem, Focus},
     my_widgets::{
-        button::{Button, ButtonState},
+        button::{ButtonSimple, ButtonState},
         input_field::FieldItem,
+        popup::{Popup, render_new_bkp_popup},
     },
 };
 use ratatui::{
@@ -63,14 +64,15 @@ impl App {
         let [explorer_list_area, _, explorer_new_button_area] = Layout::vertical([
             Constraint::Fill(1),
             Constraint::Length(1),
-            Constraint::Length(3),
+            Constraint::Length(1),
         ])
         .areas(explorer_block.inner(explorer_area));
 
         frame.render_widget(explorer_block, explorer_area);
         frame.render_stateful_widget(
-            // here make the button secondary (find colors for the theme)
-            Button::new(Line::from("New").centered()),
+            ButtonSimple::new(Line::from("New").centered())
+                .set_min_x_pad(1)
+                .focus_style(Style::default().bg(Color::DarkGray).fg(Color::White)),
             explorer_new_button_area,
             &mut ButtonState::default().set_focused(self.is_focus(Focus::ExplorerNew)),
         );
@@ -95,6 +97,16 @@ impl App {
         }
 
         frame.render_widget(bkp_page_block, bkp_page_area);
+
+        if let Some(popup) = &self.popup {
+            let center_area = frame
+                .area()
+                .centered(Constraint::Percentage(50), Constraint::Percentage(50));
+
+            match popup {
+                Popup::NewBackup(popup) => render_new_bkp_popup(frame, center_area, popup),
+            }
+        }
     }
 
     fn bkp_list(&self, area: Rect, frame: &mut Frame) {

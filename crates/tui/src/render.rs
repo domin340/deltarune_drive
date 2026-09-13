@@ -3,7 +3,7 @@ use crate::{
     conf::Bkp,
     manage_focus::{ExplorerListItem, Focus},
     my_widgets::{
-        button::{Button, ButtonState},
+        button::{Button, ButtonSimple, ButtonState},
         input_field::FieldItem,
         popup::{NewBackupPopup, Popup, render_new_bkp_popup},
     },
@@ -64,14 +64,15 @@ impl App {
         let [explorer_list_area, _, explorer_new_button_area] = Layout::vertical([
             Constraint::Fill(1),
             Constraint::Length(1),
-            Constraint::Length(3),
+            Constraint::Length(1),
         ])
         .areas(explorer_block.inner(explorer_area));
 
         frame.render_widget(explorer_block, explorer_area);
         frame.render_stateful_widget(
-            // here make the button secondary (find colors for the theme)
-            Button::new(Line::from("New").centered()),
+            ButtonSimple::new(Line::from("New").centered())
+                .set_min_x_pad(1)
+                .focus_style(Style::default().bg(Color::DarkGray).fg(Color::White)),
             explorer_new_button_area,
             &mut ButtonState::default().set_focused(self.is_focus(Focus::ExplorerNew)),
         );

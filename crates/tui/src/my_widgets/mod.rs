@@ -24,3 +24,15 @@ impl From<Rect> for Corners {
         }
     }
 }
+
+pub mod styles {
+    use ratatui::style::{Color, Style};
+
+    pub const MENU: Style = Style::new().bg(Color::Reset);
+
+    pub const POPUP: Style = Style::new().bg(Color::Blue);
+
+    pub const ACTIVE_BLOCK: Style = Style::new().fg(Color::Blue);
+
+    pub const FOCUSED: Style = Style::new().bg(Color::DarkGray).fg(Color::White);
+}

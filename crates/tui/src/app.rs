@@ -11,14 +11,12 @@ pub enum Popup {
     DeleteBkp { choice: BinaryChoice },
 }
 
-// FIXME: backup preview shouldn't allocate needlessly for fields when previewing items.
 pub struct App {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
     pub focus: Focus,
     pub bkp_name_field: Field,
     pub bkp_desc_field: Field,
-    /// NOTE: can be set by [`State::exec_ui_action`] usually by pressing enter
     pub editing: bool,
     pub list_item: Option<ExplorerListItem>,
     pub popup: Option<Popup>,

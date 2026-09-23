@@ -20,24 +20,24 @@ fn main() -> io::Result<()> {
 }
 
 fn handle_input_action(app: &mut App, action: InputAction) {
-    match app.focus {
-        Focus::BkpName => {
-            let res = app.bkp_name_field.handle_action(action);
+    // match app.focus {
+    //     Focus::BkpName => {
+    //         let res = app.bkp_name_field.handle_action(action);
 
-            if res.confirm {
-                app.editing = false;
+    //         if res.confirm {
+    //             app.editing = false;
 
-                let new_name = app.bkp_name_field.to_string();
-                match app.selected_bkp_mut() {
-                    Bkp::Unregistered(bkp) => bkp.name = new_name,
-                    Bkp::Registered(bkp) => bkp.name = new_name,
-                };
-            } else if !res.handled {
-                app.editing = false;
-            }
-        }
-        _ => {}
-    }
+    //             let new_name = app.bkp_name_field.to_string();
+    //             match app.selected_bkp_mut() {
+    //                 Bkp::Unregistered(bkp) => bkp.name = new_name,
+    //                 Bkp::Registered(bkp) => bkp.name = new_name,
+    //             };
+    //         } else if !res.handled {
+    //             app.editing = false;
+    //         }
+    //     }
+    //     _ => {}
+    // }
 }
 
 fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {

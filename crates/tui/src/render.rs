@@ -84,9 +84,6 @@ impl App {
                 .idx()
                 .saturating_sub(bkps_list_state.offset());
 
-            let item_x = explorer_list_area.x;
-            let item_y = explorer_list_area.y + selected_item as u16;
-
             let vw_dependent_menu_offset = {
                 let dif = explorer_list_area
                     .width
@@ -99,12 +96,12 @@ impl App {
                 }
             };
 
-            let menu_area = Rect {
-                width: MENU_WIDTH,
-                height: MENU_HEIGHT,
-                x: item_x + vw_dependent_menu_offset,
-                y: item_y + MENU_OFFSET.1,
-            };
+            let item_x = explorer_list_area.x + vw_dependent_menu_offset;
+            let item_y = explorer_list_area.y + selected_item as u16 + MENU_OFFSET.1;
+
+            let screen = frame.area();
+            let (x, y) = fit_on_screen(item_x, item_y, MENU_WIDTH, MENU_HEIGHT, screen);
+            let menu_area = Rect::new(x, y, MENU_WIDTH, MENU_HEIGHT);
 
             frame.render_stateful_widget(
                 Menu::new(
@@ -177,4 +174,24 @@ impl App {
     fn bkp_names(&self) -> impl Iterator<Item = &str> {
         self.conf.bkps.iter().map(Bkp::name)
     }
+}
+
+fn fit_on_screen(x: u16, y: u16, width: u16, height: u16, screen: Rect) -> (u16, u16) {
+    let x = if x + width <= screen.right() {
+        x
+    } else {
+        x.saturating_sub(width)
+    };
+
+    let y = if y + height <= screen.bottom() {
+        y
+    } else {
+        y.saturating_sub(height)
+    };
+
+    let x = x.clamp(screen.left(), screen.right().saturating_sub(width));
+
+    let y = y.clamp(screen.top(), screen.bottom().saturating_sub(height));
+
+    (x, y)
 }

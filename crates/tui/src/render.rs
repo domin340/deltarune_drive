@@ -47,9 +47,7 @@ impl App {
     }
 
     pub fn ui(&self, frame: &mut Frame) {
-        let [explorer_area, bkp_page_area] =
-            Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
-                .areas(frame.area());
+        let explorer_area = frame.area();
 
         // == handle explorer here ==
         let explorer_block = {
@@ -78,20 +76,6 @@ impl App {
         );
 
         self.bkp_list(explorer_list_area, frame);
-
-        // == handle right panel here ==
-        let bkp_page_block = {
-            let mut block = Block::bordered().title("Display (RIGHT)");
-            if self.is_focus_bkp() {
-                block = block.border_style(Style::default().fg(Color::Blue));
-            }
-
-            block
-        };
-
-        let content_bkp_page_area = bkp_page_block.inner(bkp_page_area);
-        frame.render_widget(bkp_page_block, bkp_page_area);
-        self.bkp_page(content_bkp_page_area, frame);
 
         if let Some(popup) = &self.popup {
             let center_area = frame
@@ -133,55 +117,6 @@ impl App {
             area,
             &mut ListState::default().with_selected(self.list_item_idx()),
         );
-    }
-
-    fn empty_bkp_page(&self, area: Rect, frame: &mut Frame) {
-        let [_, info_area, _] = Layout::vertical([
-            Constraint::Fill(1),
-            Constraint::Length(1),
-            Constraint::Fill(1),
-        ])
-        .areas(area);
-
-        let line = Line::from("no backup selected").centered();
-        frame.render_widget(line, info_area);
-    }
-
-    fn bkp_page(&self, area: Rect, frame: &mut Frame) {
-        if let Some(item) = self.list_item {
-            let [name_input_area, _] = Layout::vertical([
-                Constraint::Length(MAX_NAME_FIELD_LINES as u16 + 2), /* name field + block */
-                Constraint::Fill(1),
-            ])
-            .areas(area);
-
-            let (name_field, name_cursor) = if self.is_editing(Focus::BkpName) {
-                let cursor = self.bkp_name_field.cursor.clone();
-                (self.bkp_name_field.to_input_item(), Some(cursor))
-            } else {
-                let bkp_name = self.get_bkp(item.idx()).unwrap().name();
-                (FieldItem::from_str(bkp_name), None)
-            };
-
-            frame.render_widget(
-                name_field.set_cursor(name_cursor).block({
-                    let mut block = Block::bordered().title("Backup Name");
-                    if self.is_focus(Focus::BkpName) {
-                        if self.editing {
-                            block = block.border_style(Style::default().fg(Color::DarkGray));
-                        } else {
-                            block =
-                                block.style(Style::default().bg(Color::DarkGray).fg(Color::White));
-                        };
-                    }
-
-                    block
-                }),
-                name_input_area,
-            );
-        } else {
-            self.empty_bkp_page(area, frame);
-        }
     }
 
     pub fn get_bkp(&self, idx: usize) -> Option<&Bkp> {

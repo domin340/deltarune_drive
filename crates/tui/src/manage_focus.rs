@@ -29,18 +29,30 @@ impl From<usize> for ExplorerListItem {
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum MenuFocus {
+    #[default]
+    Rename,
+    Load,
+    Clone,
+    Delete,
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Focus {
     #[default]
     ExplorerList,
     ExplorerNew,
-    BkpName,
-    BkpDesc,
-    BkpCreated,
-    BkpUpdated,
-    BkpDelete,
-    BkpLoad,
-    BkpDuplicate,
-    BkpReplace,
+    Menu(MenuFocus),
+}
+
+impl Focus {
+    pub fn as_menu_index(self) -> Option<usize> {
+        if let Focus::Menu(focus) = self {
+            Some(focus as usize)
+        } else {
+            None
+        }
+    }
 }
 
 impl App {
@@ -95,7 +107,7 @@ impl App {
 
                             // switch focus to the new backup page
                             self.list_item = Some(new_list_idx.into());
-                            self.focus = Focus::BkpName;
+                            self.focus = Focus::ExplorerList;
                         }
 
                         // otherwise stay where the focus were before.
@@ -171,6 +183,7 @@ impl App {
 
                     Focus::ExplorerList
                 }
+                UiAction::Enter => Focus::Menu(MenuFocus::default()),
                 UiAction::Down => {
                     if let Some(item) = self.list_item {
                         let last_idx = self.last_list_item().idx();
@@ -185,78 +198,33 @@ impl App {
                         Focus::ExplorerNew
                     }
                 }
-                UiAction::Enter | UiAction::Right => Focus::BkpName,
                 UiAction::Tab => {
                     self.list_item = None;
                     Focus::ExplorerNew
                 }
                 _ => Focus::ExplorerList,
             },
-            Focus::BkpName => match action {
-                UiAction::Left => Focus::ExplorerList,
-                UiAction::Down | UiAction::Tab => Focus::BkpDesc,
-                UiAction::Escape => Focus::ExplorerList,
-                UiAction::Enter => {
-                    self.editing = true;
-                    let bkp_name = self.selected_bkp().name();
-                    self.bkp_name_field.set_line(0, bkp_name.to_string());
-                    Focus::BkpName
-                }
-                _ => Focus::BkpName,
-            },
-            Focus::BkpDesc => match action {
-                UiAction::Left => Focus::ExplorerList,
-                UiAction::Down | UiAction::Tab => Focus::BkpCreated,
-                UiAction::Up => Focus::BkpName,
-                UiAction::Escape => Focus::ExplorerList,
-                UiAction::Enter => {
-                    self.editing = true;
-                    Focus::BkpDesc
-                }
-                _ => Focus::BkpDesc,
-            },
-            Focus::BkpCreated => match action {
-                UiAction::Left => Focus::ExplorerList,
-                UiAction::Down | UiAction::Tab => Focus::BkpUpdated,
-                UiAction::Up => Focus::BkpDesc,
-                UiAction::Escape => Focus::ExplorerList,
-                _ => Focus::BkpCreated,
-            },
-            Focus::BkpUpdated => match action {
-                UiAction::Left => Focus::ExplorerList,
-                UiAction::Down | UiAction::Tab => Focus::BkpDuplicate,
-                UiAction::Up => Focus::BkpCreated,
-                UiAction::Escape => Focus::ExplorerList,
-                _ => Focus::BkpUpdated,
-            },
-            Focus::BkpDuplicate => match action {
-                UiAction::Left => Focus::ExplorerList,
-                UiAction::Right | UiAction::Tab => Focus::BkpReplace,
-                UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::ExplorerList,
-                _ => Focus::BkpDuplicate,
-            },
-            Focus::BkpReplace => match action {
-                UiAction::Left => Focus::BkpDuplicate,
-                UiAction::Right | UiAction::Tab => Focus::BkpDelete,
-                UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::ExplorerList,
-                _ => Focus::BkpReplace,
-            },
-            Focus::BkpDelete => match action {
-                UiAction::Left => Focus::BkpReplace,
-                UiAction::Right | UiAction::Tab => Focus::BkpLoad,
-                UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::ExplorerList,
-                _ => Focus::BkpDelete,
-            },
-            Focus::BkpLoad => match action {
-                UiAction::Left => Focus::BkpDelete,
-                UiAction::Tab => Focus::BkpName,
-                UiAction::Up => Focus::BkpUpdated,
-                UiAction::Escape => Focus::ExplorerList,
-                _ => Focus::BkpLoad,
-            },
+            Focus::Menu(_) if action == UiAction::Escape => Focus::ExplorerList,
+            Focus::Menu(menu) => Focus::Menu(match menu {
+                MenuFocus::Rename => match action {
+                    UiAction::Down => MenuFocus::Load,
+                    _ => MenuFocus::Rename,
+                },
+                MenuFocus::Load => match action {
+                    UiAction::Down => MenuFocus::Clone,
+                    UiAction::Up => MenuFocus::Rename,
+                    _ => MenuFocus::Load,
+                },
+                MenuFocus::Clone => match action {
+                    UiAction::Down => MenuFocus::Delete,
+                    UiAction::Up => MenuFocus::Load,
+                    _ => MenuFocus::Clone,
+                },
+                MenuFocus::Delete => match action {
+                    UiAction::Up => MenuFocus::Clone,
+                    _ => MenuFocus::Delete,
+                },
+            }),
         };
     }
 }

@@ -1,22 +1,21 @@
+use crate::conf::Conf;
 use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
-use crate::my_widgets::input_field::Limits;
 use crate::my_widgets::popup::BinaryChoice;
-use crate::{conf::Conf, my_widgets::input_field::Field};
-
-pub const MAX_NAME_FIELD_LINES: usize = 1;
 
 pub enum Popup {
+    // NewBackup(InputPopup),
     NewBkp { choice: BinaryChoice },
     DeleteBkp { choice: BinaryChoice },
+    // RenameBackup(InputPopup),
+    // LoadBackup(BinaryChoice),
+    // DeleteBackup(BinaryChoice),
 }
 
 pub struct App {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
     pub focus: Focus,
-    pub bkp_name_field: Field,
-    pub bkp_desc_field: Field,
     pub editing: bool,
     pub list_item: Option<ExplorerListItem>,
     pub popup: Option<Popup>,
@@ -33,9 +32,6 @@ impl App {
         Self {
             conf: Conf::default(),
             focus: Focus::default(),
-            bkp_name_field: Field::default()
-                .set_limits(Limits::default().set_lines(MAX_NAME_FIELD_LINES)),
-            bkp_desc_field: Field::default(),
             editing: false,
             list_item: None,
             popup: None,

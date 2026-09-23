@@ -158,16 +158,8 @@ impl App {
         self.conf.bkps.get(idx)
     }
 
-    pub fn get_bkp_mut(&mut self, idx: usize) -> Option<&mut Bkp> {
-        self.conf.bkps.get_mut(idx)
-    }
-
     pub fn selected_bkp(&self) -> &Bkp {
         self.get_bkp(self.list_item.unwrap().idx()).unwrap()
-    }
-
-    pub fn selected_bkp_mut(&mut self) -> &mut Bkp {
-        self.get_bkp_mut(self.list_item.unwrap().idx()).unwrap()
     }
 
     fn bkp_names(&self) -> impl Iterator<Item = &str> {

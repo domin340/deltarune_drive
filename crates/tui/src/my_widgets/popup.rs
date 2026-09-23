@@ -5,7 +5,10 @@ use ratatui::{
     widgets::{Clear, StatefulWidget, Widget},
 };
 
-use crate::my_widgets::button::{ButtonSimple, ButtonState};
+use crate::my_widgets::{
+    button::{ButtonSimple, ButtonState},
+    input_line::InputState,
+};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BinaryChoice {
@@ -75,4 +78,10 @@ impl StatefulWidget for BinaryChoicePopup<'_> {
                 &mut ButtonState::default().set_focused(!yes_picked),
             );
     }
+}
+
+#[derive(Default)]
+pub struct InputPopup {
+    input: InputState,
+    submit: Option<BinaryChoice>,
 }

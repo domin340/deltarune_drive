@@ -45,6 +45,7 @@ pub struct Menu<'text, 'key> {
     selected_style: Option<Style>,
     /// Width of the gap between text and key if present inside [`MenuItem`]
     item_key_gap: usize,
+    item_x_pad: u16,
 }
 
 impl Default for Menu<'_, '_> {
@@ -53,6 +54,7 @@ impl Default for Menu<'_, '_> {
             items: vec![],
             selected_style: None,
             item_key_gap: 2,
+            item_x_pad: 0,
         }
     }
 }
@@ -63,6 +65,11 @@ impl<'text, 'key> Menu<'text, 'key> {
             items: items.map(Into::into).collect(),
             ..Default::default()
         }
+    }
+
+    pub const fn with_item_x_pad(mut self, x_pad: u16) -> Self {
+        self.item_x_pad = x_pad;
+        self
     }
 
     pub const fn with_item_key_gap(mut self, gap: usize) -> Self {
@@ -101,7 +108,7 @@ impl StatefulWidget for Menu<'_, '_> {
             .zip(iter_start..)
             .zip(area.y..(area.y + area.height))
         {
-            let item_area = Rect {
+            let mut item_area = Rect {
                 x: area.x,
                 y: y_cord,
                 width: area.width,
@@ -115,9 +122,13 @@ impl StatefulWidget for Menu<'_, '_> {
                 buf.set_style(item_area, selected_style);
             }
 
+            // apply padding now
+            item_area.x += self.item_x_pad;
+            item_area.width -= self.item_x_pad * 2;
+
+            // shorten menu item text if item width is greater than area's
             let w = item_area.width as usize;
             let key_w = item.key.as_ref().map(|key| key.width()).unwrap_or_default();
-
             if item.text.width() + key_w + self.item_key_gap > w {
                 let shortened_len = w - self.item_key_gap - key_w;
                 let t = item.text.content.to_mut();
@@ -134,9 +145,11 @@ impl StatefulWidget for Menu<'_, '_> {
                 t.truncate(shortened_len);
             }
 
+            // find where to place key and render it
             if let Some(key) = item.key {
                 let key_area = Rect {
-                    x: ((area.x + area.width) as usize - key.width()).min(u16::MAX as usize) as u16,
+                    x: ((item_area.x + item_area.width) as usize - key.width())
+                        .min(u16::MAX as usize) as u16,
                     ..item_area
                 };
 

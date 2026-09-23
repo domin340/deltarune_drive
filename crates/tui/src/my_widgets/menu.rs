@@ -44,7 +44,7 @@ pub struct Menu<'text, 'key> {
     items: Vec<MenuItem<'text, 'key>>,
     selected_style: Option<Style>,
     /// Width of the gap between text and key if present inside [`MenuItem`]
-    menu_item_gap: usize,
+    item_key_gap: usize,
 }
 
 impl Default for Menu<'_, '_> {
@@ -52,7 +52,7 @@ impl Default for Menu<'_, '_> {
         Self {
             items: vec![],
             selected_style: None,
-            menu_item_gap: 2,
+            item_key_gap: 2,
         }
     }
 }
@@ -65,8 +65,8 @@ impl<'text, 'key> Menu<'text, 'key> {
         }
     }
 
-    pub const fn with_menu_item_gap(mut self, gap: usize) -> Self {
-        self.menu_item_gap = gap;
+    pub const fn with_item_key_gap(mut self, gap: usize) -> Self {
+        self.item_key_gap = gap;
         self
     }
 
@@ -118,8 +118,8 @@ impl StatefulWidget for Menu<'_, '_> {
             let w = item_area.width as usize;
             let key_w = item.key.as_ref().map(|key| key.width()).unwrap_or_default();
 
-            if item.text.width() + key_w + self.menu_item_gap > w {
-                let shortened_len = w - self.menu_item_gap - key_w;
+            if item.text.width() + key_w + self.item_key_gap > w {
+                let shortened_len = w - self.item_key_gap - key_w;
                 let t = item.text.content.to_mut();
 
                 let (col_idx, _) = t

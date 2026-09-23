@@ -76,7 +76,8 @@ impl App {
         if let Some(selected_menu_option) = self.focus.as_menu_index() {
             const MENU_WIDTH: u16 = 20;
             const MENU_HEIGHT: u16 = 4;
-            const MENU_OFFSET: (u16, u16) = (10, 1); // (x, y)
+            const MENU_OFFSET_X: u16 = 10;
+            const MENU_OFFSET_Y: u16 = 4;
 
             let selected_item = self
                 .list_item
@@ -87,7 +88,7 @@ impl App {
             let vw_dependent_menu_offset = {
                 let dif = explorer_list_area
                     .width
-                    .saturating_sub(MENU_WIDTH + MENU_OFFSET.0);
+                    .saturating_sub(MENU_WIDTH + MENU_OFFSET_X);
 
                 match dif {
                     0..5 => 0,
@@ -97,7 +98,7 @@ impl App {
             };
 
             let item_x = explorer_list_area.x + vw_dependent_menu_offset;
-            let item_y = explorer_list_area.y + selected_item as u16 + MENU_OFFSET.1;
+            let item_y = explorer_list_area.y + selected_item as u16 + MENU_OFFSET_Y;
 
             let screen = frame.area();
             let (x, y) = fit_on_screen(item_x, item_y, MENU_WIDTH, MENU_HEIGHT, screen);

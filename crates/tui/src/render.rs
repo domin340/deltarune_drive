@@ -101,7 +101,7 @@ impl App {
                     ]
                     .into_iter(),
                 )
-                .with_menu_item_gap(2)
+                .with_item_key_gap(2)
                 .with_selected_style(Style::default().add_modifier(Modifier::REVERSED)),
                 menu_area,
                 MenuState::default().with_selected(selected_menu_option),

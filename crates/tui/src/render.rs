@@ -153,8 +153,6 @@ impl App {
         }
     }
 
-    fn bkp_list(&self, area: Rect, frame: &mut Frame) {}
-
     pub fn get_bkp(&self, idx: usize) -> Option<&Bkp> {
         self.conf.bkps.get(idx)
     }

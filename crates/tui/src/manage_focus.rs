@@ -1,9 +1,8 @@
 use crate::{
-    app::{App, Popup},
+    app::{App, InputPopupModel, Popup},
     my_widgets::popup::BinaryChoice,
 };
-use chrono::Utc;
-use crossterm::event::KeyCode;
+use crossterm::event::{Event, KeyCode, KeyModifiers};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ExplorerListItem(pub usize);
@@ -55,6 +54,40 @@ impl Focus {
     }
 }
 
+pub struct ConfirmedInput(pub bool);
+
+impl ConfirmedInput {
+    pub const fn confirmed_input(self) -> bool {
+        self.0
+    }
+}
+
+fn handle_ui_input_model(model: &mut InputPopupModel, event: UiEvent) -> ConfirmedInput {
+    if let Some(choice) = &mut model.submit {
+        let UiEvent::Press(e) = event else {
+            return ConfirmedInput(false);
+        };
+
+        match BinaryChoiceOutput::parse(*choice, e) {
+            BinaryChoiceOutput::Confirmed(choice) => {
+                if choice == BinaryChoice::Yes {
+                    return ConfirmedInput(true);
+                } else {
+                    // clear the alert popup, go back to input
+                    model.submit = None;
+                }
+            }
+            BinaryChoiceOutput::FocusOnNo => *choice = BinaryChoice::No,
+            BinaryChoiceOutput::FocusOnYes => *choice = BinaryChoice::Yes,
+            BinaryChoiceOutput::None => {}
+        }
+    } else {
+        model.input.handle_action(event);
+    }
+
+    ConfirmedInput(false)
+}
+
 impl App {
     pub fn list_item_idx(&self) -> Option<usize> {
         self.list_item.map(|item| item.idx())
@@ -64,106 +97,25 @@ impl App {
         self.conf.bkps().len().saturating_sub(1).into()
     }
 
-    pub fn handle_ui_action(&mut self, action: UiAction) {
-        /*
-        Idea:
-
-        handle_ui_key(&App, KeyEvent) -> UiAction {
-            { popup, foucs } = app
-            UiKey::parse(KeyEvent) ui_key {
-                if popup && ui_key == Enter && popup.pick == Yes {
-                    return UiAction::NewBkp {
-                        name: popup.name_field.to_string()
-                    }
-                }
-
-                if editing {
-                    return InputAction::parse(KeyEvent) action {
-                        UiAction::Input(action)
-                    }
-                }
-
-                match focus {
-                    Focus::BkpName { editing: false } && ui_key == Enter => {
-                        return UiAction::FocusOn(Focus::BkpName { editing: true })
-                    }
-                    ...
-                }
-
-                ...
-            }
-
-            ...
-        }
-        */
-
-        if let Some(popup) = &mut self.popup {
-            match popup {
-                Popup::NewBkp { choice } => match BinaryChoiceOutput::parse(*choice, action) {
-                    BinaryChoiceOutput::Confirmed(choice) => {
-                        if choice == BinaryChoice::Yes {
-                            let new_bkp_name = format!("{}", Utc::now().format("%d/%m/%Y %H:%M"));
-                            let new_list_idx = self.create_registered_bkp(new_bkp_name);
-
-                            // switch focus to the new backup page
-                            self.list_item = Some(new_list_idx.into());
-                            self.focus = Focus::ExplorerList;
-                        }
-
-                        // otherwise stay where the focus were before.
-                        // close popup either way
-
-                        self.popup = None;
-                    }
-                    BinaryChoiceOutput::FocusOnNo => *choice = BinaryChoice::No,
-                    BinaryChoiceOutput::FocusOnYes => *choice = BinaryChoice::Yes,
-                    BinaryChoiceOutput::None => {}
-                },
-                Popup::DeleteBkp { choice } => match BinaryChoiceOutput::parse(*choice, action) {
-                    BinaryChoiceOutput::Confirmed(choice) => {
-                        if choice == BinaryChoice::Yes {
-                            let current_list_item = self.list_item.unwrap();
-                            self.delete_bkp(current_list_item.idx());
-
-                            self.list_item = if self.conf.bkps.is_empty() {
-                                None
-                            } else {
-                                Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
-                            };
-                        }
-
-                        self.popup = None;
-                    }
-                    BinaryChoiceOutput::FocusOnYes => *choice = BinaryChoice::Yes,
-                    BinaryChoiceOutput::FocusOnNo => *choice = BinaryChoice::No,
-                    BinaryChoiceOutput::None => {}
-                },
-            };
-
-            return;
-        }
-
+    fn handle_ui_focus(&mut self, action: UiPress) {
         self.focus = match self.focus {
             Focus::ExplorerNew => match action {
-                UiAction::Up if !self.bkps_empty() => {
+                UiPress::Up if !self.bkps_empty() => {
                     self.list_item = Some(self.last_list_item());
                     Focus::ExplorerList // item above the new button
                 }
-                UiAction::Tab | UiAction::Down if !self.bkps_empty() => {
+                UiPress::Tab | UiPress::Down if !self.bkps_empty() => {
                     self.list_item = Some(0.into());
                     Focus::ExplorerList // beginning of the list
                 }
-                UiAction::Enter => {
-                    let popup = Popup::NewBkp {
-                        choice: BinaryChoice::default(),
-                    };
-                    self.popup = Some(popup);
+                UiPress::Enter => {
+                    self.popup = Some(Popup::NewBackup(InputPopupModel::default()));
                     Focus::ExplorerNew
                 }
                 _ => Focus::ExplorerNew,
             },
             Focus::ExplorerList => match action {
-                UiAction::Up => {
+                UiPress::Up => {
                     if let Some(item) = self.list_item {
                         if item.idx() == 0 {
                             self.list_item = None;
@@ -176,15 +128,8 @@ impl App {
                         Focus::ExplorerNew
                     }
                 }
-                UiAction::D => {
-                    self.popup = Some(Popup::DeleteBkp {
-                        choice: BinaryChoice::default(),
-                    });
-
-                    Focus::ExplorerList
-                }
-                UiAction::Enter => Focus::Menu(MenuFocus::default()),
-                UiAction::Down => {
+                UiPress::Enter => Focus::Menu(MenuFocus::default()),
+                UiPress::Down => {
                     if let Some(item) = self.list_item {
                         let last_idx = self.last_list_item().idx();
                         if item.idx() == last_idx {
@@ -198,59 +143,118 @@ impl App {
                         Focus::ExplorerNew
                     }
                 }
-                UiAction::Tab => {
+                UiPress::Tab => {
                     self.list_item = None;
                     Focus::ExplorerNew
                 }
                 _ => Focus::ExplorerList,
             },
-            Focus::Menu(_) if action == UiAction::Escape => Focus::ExplorerList,
+            Focus::Menu(_) if action == UiPress::Escape => Focus::ExplorerList,
             Focus::Menu(menu) => Focus::Menu(match menu {
                 MenuFocus::Rename => match action {
-                    UiAction::Down => MenuFocus::Load,
+                    UiPress::Down => MenuFocus::Load,
                     _ => MenuFocus::Rename,
                 },
                 MenuFocus::Load => match action {
-                    UiAction::Down => MenuFocus::Clone,
-                    UiAction::Up => MenuFocus::Rename,
+                    UiPress::Down => MenuFocus::Clone,
+                    UiPress::Up => MenuFocus::Rename,
                     _ => MenuFocus::Load,
                 },
                 MenuFocus::Clone => match action {
-                    UiAction::Down => MenuFocus::Delete,
-                    UiAction::Up => MenuFocus::Load,
+                    UiPress::Down => MenuFocus::Delete,
+                    UiPress::Up => MenuFocus::Load,
                     _ => MenuFocus::Clone,
                 },
                 MenuFocus::Delete => match action {
-                    UiAction::Up => MenuFocus::Clone,
+                    UiPress::Up => MenuFocus::Clone,
+                    UiPress::Enter => {
+                        self.popup = Some(Popup::DeleteBkp(BinaryChoice::Yes));
+                        MenuFocus::Delete
+                    }
                     _ => MenuFocus::Delete,
                 },
             }),
         };
     }
+
+    pub fn handle_ui(&mut self, event: UiEvent) {
+        if let Some(popup) = &mut self.popup {
+            match popup {
+                Popup::NewBackup(model) => {
+                    if handle_ui_input_model(model, event).confirmed_input() {
+                        let bkp_name = std::mem::take(model.input.buf_mut());
+                        let new_list_idx = self.create_registered_bkp(bkp_name);
+
+                        // switch focus to the new backup page
+                        self.list_item = Some(new_list_idx.into());
+                        self.focus = Focus::ExplorerList;
+
+                        // clear the popup, string buffer data is taken.
+                        self.popup = None;
+                    }
+                }
+                Popup::DeleteBkp(choice) => {
+                    if let UiEvent::Press(action) = event {
+                        match BinaryChoiceOutput::parse(*choice, action) {
+                            BinaryChoiceOutput::Confirmed(choice) => {
+                                if choice == BinaryChoice::Yes {
+                                    let current_list_item = self.list_item.unwrap();
+                                    self.delete_bkp(current_list_item.idx());
+
+                                    self.list_item = if self.conf.bkps.is_empty() {
+                                        None
+                                    } else {
+                                        Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
+                                    };
+                                }
+
+                                self.popup = None;
+                            }
+                            BinaryChoiceOutput::FocusOnYes => *choice = BinaryChoice::Yes,
+                            BinaryChoiceOutput::FocusOnNo => *choice = BinaryChoice::No,
+                            BinaryChoiceOutput::None => {}
+                        }
+                    }
+                }
+            }
+
+            return;
+        };
+
+        if let UiEvent::Press(press) = event {
+            self.handle_ui_focus(press);
+        }
+    }
 }
 
+#[derive(Default)]
 enum BinaryChoiceOutput {
     Confirmed(BinaryChoice),
     FocusOnYes,
     FocusOnNo,
+    #[default]
     None,
 }
 
 impl BinaryChoiceOutput {
-    pub fn parse(choice: BinaryChoice, action: UiAction) -> Self {
+    pub fn parse(choice: BinaryChoice, action: UiPress) -> Self {
         match action {
-            UiAction::Enter => Self::Confirmed(choice),
-            UiAction::Y => Self::Confirmed(BinaryChoice::Yes),
-            UiAction::N | UiAction::Escape => Self::Confirmed(BinaryChoice::No),
-            UiAction::Left => Self::FocusOnYes,
-            UiAction::Right => Self::FocusOnNo,
+            UiPress::Enter => Self::Confirmed(choice),
+            UiPress::Left => Self::FocusOnYes,
+            UiPress::Right => Self::FocusOnNo,
             _ => Self::None,
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum UiAction {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UiEvent<'paste> {
+    Paste(&'paste str),
+    Press(UiPress),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UiPress {
     Right,
     Left,
     Up,
@@ -258,29 +262,29 @@ pub enum UiAction {
     Enter,
     Escape,
     Tab,
-    /// Delete for short
-    D,
-    /// Yes for short
-    Y,
-    /// No for short
-    N,
+    Char(char),
 }
 
-impl UiAction {
-    pub fn parse(code: KeyCode) -> Option<Self> {
-        Some(match code {
-            KeyCode::Right => Self::Right,
-            KeyCode::Left => Self::Left,
-            KeyCode::Up => Self::Up,
-            KeyCode::Down => Self::Down,
-            KeyCode::Enter => Self::Enter,
-            KeyCode::Esc => Self::Escape,
-            KeyCode::Tab => Self::Tab,
-            KeyCode::Char(c) => match c {
-                'd' => Self::D,
-                'y' => Self::Y,
-                'n' => Self::N,
-                _ => return None,
+impl<'a> UiEvent<'a> {
+    pub fn parse_event(e: &'a Event) -> Option<UiEvent<'a>> {
+        Some(match e {
+            Event::Paste(paste) => UiEvent::Paste(paste),
+            Event::Key(key) if key.is_press() => match key.code {
+                KeyCode::Char('v' | 'V') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    // handle paste
+                    todo!()
+                }
+                code => UiEvent::Press(match code {
+                    KeyCode::Right => UiPress::Right,
+                    KeyCode::Left => UiPress::Left,
+                    KeyCode::Up => UiPress::Up,
+                    KeyCode::Down => UiPress::Down,
+                    KeyCode::Enter => UiPress::Enter,
+                    KeyCode::Esc => UiPress::Escape,
+                    KeyCode::Tab => UiPress::Tab,
+                    KeyCode::Char(c) => UiPress::Char(c),
+                    _ => return None,
+                }),
             },
             _ => return None,
         })

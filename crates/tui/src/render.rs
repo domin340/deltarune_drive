@@ -5,7 +5,7 @@ use crate::{
     my_widgets::{
         button::{ButtonSimple, ButtonState},
         menu::{Menu, MenuItem, MenuState},
-        popup::BinaryChoicePopup,
+        popup::{BinaryChoicePopup, InputPopup},
     },
 };
 use ratatui::{
@@ -114,16 +114,11 @@ impl App {
                 .centered(Constraint::Percentage(50), Constraint::Percentage(50));
 
             match popup {
-                Popup::NewBkp { choice } => {
-                    frame.render_stateful_widget(
-                        BinaryChoicePopup::new(
-                            Line::from("create a new backup from deltarune files?").centered(),
-                        ),
-                        center_area,
-                        &mut choice.clone(),
-                    );
+                Popup::NewBackup(input_model) => {
+                    let popup: InputPopup = input_model.into();
+                    frame.render_widget(popup.with_question("create a new backup?"), center_area);
                 }
-                Popup::DeleteBkp { choice } => {
+                Popup::DeleteBkp(choice) => {
                     let selected_bkp_name = self.selected_bkp().name();
                     frame.render_stateful_widget(
                         BinaryChoicePopup::new(

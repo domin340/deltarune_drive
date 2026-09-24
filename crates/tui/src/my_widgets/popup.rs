@@ -7,7 +7,7 @@ use ratatui::{
 
 use crate::my_widgets::{
     button::{ButtonSimple, ButtonState},
-    input_line::InputState,
+    input_line::{Input, InputState},
 };
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -80,8 +80,45 @@ impl StatefulWidget for BinaryChoicePopup<'_> {
     }
 }
 
-#[derive(Default)]
-pub struct InputPopup {
-    input: InputState,
+pub struct InputPopup<'a, 'line> {
+    question: &'line str,
+    input: Input<'a>,
     submit: Option<BinaryChoice>,
+}
+
+impl<'a> From<Input<'a>> for InputPopup<'a, '_> {
+    fn from(input: Input<'a>) -> Self {
+        Self {
+            input,
+            question: "",
+            submit: None,
+        }
+    }
+}
+
+impl<'a, 'line> InputPopup<'a, 'line> {
+    pub const fn with_submit(mut self, submit: Option<BinaryChoice>) -> Self {
+        self.submit = submit;
+        self
+    }
+
+    pub const fn with_question(mut self, s: &'line str) -> Self {
+        self.question = s;
+        self
+    }
+}
+
+impl Widget for InputPopup<'_, '_> {
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer)
+    where
+        Self: Sized,
+    {
+        if let Some(mut submit) = self.submit {
+            let line = Line::raw(self.question);
+            BinaryChoicePopup::new(line).render(area, buf, &mut submit);
+        } else {
+            let input_area = area.centered_vertically(Constraint::Length(1));
+            self.input.render(input_area, buf);
+        }
+    }
 }

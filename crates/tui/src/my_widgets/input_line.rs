@@ -88,7 +88,7 @@ impl<'line> Input<'line> {
         }
     }
 
-    pub const fn else_with_placeholder(mut self, s: &'line str) -> Self {
+    pub const fn placeholder(mut self, s: &'line str) -> Self {
         if self.s.is_empty() {
             self.s = s;
         }

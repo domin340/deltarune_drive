@@ -64,10 +64,14 @@ impl InputState {
         }
     }
 
+    pub const fn cursor_index(&self) -> usize {
+        self.index
+    }
+
     /// Creates [`Input`] renderable widget from state.
     /// Borrows current buffer to share with Input.
     pub fn input_widget(&self) -> Input<'_> {
-        Input::new(&self.s).cursor_index(self.index)
+        Input::new(&self.s).with_cursor_index(self.index)
     }
 
     pub const fn len(&self) -> usize {
@@ -106,12 +110,20 @@ impl<'line> Input<'line> {
         }
     }
 
-    pub const fn cursor_index(mut self, cursor_index: usize) -> Self {
+    pub const fn else_with_placeholder(mut self, s: &'line str) -> Self {
+        if self.s.is_empty() {
+            self.s = s;
+        }
+
+        self
+    }
+
+    pub const fn with_cursor_index(mut self, cursor_index: usize) -> Self {
         self.cursor_index = Some(cursor_index);
         self
     }
 
-    pub const fn style(mut self, style: Style) -> Self {
+    pub const fn with_style(mut self, style: Style) -> Self {
         self.style = Some(style);
         self
     }

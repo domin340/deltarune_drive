@@ -7,9 +7,9 @@ mod render;
 use crate::{
     app::App,
     conf::{Conf, extend_bkps_with_fakes},
-    manage_focus::{Focus, UiAction},
+    manage_focus::{Focus, UiEvent},
 };
-use crossterm::event::{self, KeyCode};
+use crossterm::event::KeyCode;
 use ratatui::DefaultTerminal;
 use std::io;
 
@@ -24,17 +24,17 @@ fn run_app(term: &mut DefaultTerminal) -> io::Result<()> {
     'run_app: loop {
         term.draw(|frame| app.ui(frame))?;
 
-        if let Some(key) = event::read()?.as_key_press_event() {
-            match key.code {
-                KeyCode::Char('q') => break 'run_app,
-                _ => {
-                    if !app.editing
-                        && let Some(ui_action) = UiAction::parse(key.code)
-                    {
-                        app.handle_ui_action(ui_action);
-                    }
-                }
-            }
+        let event = crossterm::event::read()?;
+
+        if event
+            .as_key_press_event()
+            .is_some_and(|e| matches!(e.code, KeyCode::Char('q' | 'Q')))
+        {
+            break 'run_app;
+        }
+
+        if let Some(ui_event) = UiEvent::parse_event(&event) {
+            app.handle_ui(ui_event);
         }
     }
 

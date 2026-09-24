@@ -1,33 +1,5 @@
-use crossterm::event::{Event, KeyCode};
+use crate::UiEvent;
 use ratatui::{layout::Rect, style::Style, widgets::Widget};
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum InputAction<'paste> {
-    MoveLeft,
-    MoveRight,
-    Insert(char),
-    Delete,
-    Paste(&'paste str),
-}
-
-impl<'e> InputAction<'e> {
-    pub fn parse_event(e: &'e Event) -> Option<Self> {
-        Some(match e {
-            Event::Key(e) => match e.code {
-                KeyCode::Char(c) => Self::Insert(c),
-                code if e.modifiers.is_empty() => match code {
-                    KeyCode::Left => Self::MoveLeft,
-                    KeyCode::Right => Self::MoveRight,
-                    KeyCode::Backspace => Self::Delete,
-                    _ => return None,
-                },
-                _ => return None,
-            },
-            Event::Paste(paste) => Self::Paste(paste.as_str()),
-            _ => return None,
-        })
-    }
-}
 
 /// Struct that handles input inner buffer and cursor.
 /// Additionally handles [`InputAction`].
@@ -64,6 +36,10 @@ impl InputState {
         }
     }
 
+    pub(crate) const fn buf_mut(&mut self) -> &mut String {
+        &mut self.s
+    }
+
     pub const fn cursor_index(&self) -> usize {
         self.index
     }
@@ -85,6 +61,8 @@ impl InputState {
     pub fn move_to(&mut self, index: usize) {
         self.index = index.min(self.len())
     }
+
+    pub fn handle_action(&mut self, action: UiEvent) {}
 
     /*
     todo:

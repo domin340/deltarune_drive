@@ -7,7 +7,7 @@ use ratatui::{
 
 use crate::my_widgets::{
     button::{ButtonSimple, ButtonState},
-    input_line::{Input, InputState},
+    input_line::Input,
 };
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

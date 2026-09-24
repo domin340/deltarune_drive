@@ -1,8 +1,10 @@
 use crate::conf::Conf;
 use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
-use crate::my_widgets::input_line::InputState;
-use crate::my_widgets::popup::{BinaryChoice, InputPopup};
+use crate::my_widgets::{
+    input_line::InputState,
+    popup::{BinaryChoice, InputPopup},
+};
 
 #[derive(Default)]
 pub struct InputPopupModel {

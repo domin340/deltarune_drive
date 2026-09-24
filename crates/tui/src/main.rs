@@ -1,5 +1,6 @@
 mod app;
 mod conf;
+mod input;
 mod manage_focus;
 mod my_widgets;
 mod render;
@@ -7,7 +8,8 @@ mod render;
 use crate::{
     app::App,
     conf::{Conf, extend_bkps_with_fakes},
-    manage_focus::{Focus, UiEvent},
+    input::UiEvent,
+    manage_focus::Focus,
 };
 use crossterm::event::KeyCode;
 use ratatui::DefaultTerminal;

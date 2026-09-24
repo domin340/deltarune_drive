@@ -1,12 +1,24 @@
 use crate::conf::Conf;
 use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
-use crate::my_widgets::popup::BinaryChoice;
+use crate::my_widgets::input_line::InputState;
+use crate::my_widgets::popup::{BinaryChoice, InputPopup};
+
+#[derive(Default)]
+pub struct InputPopupModel {
+    pub submit: Option<BinaryChoice>,
+    pub input: InputState,
+}
+
+impl<'a> From<&'a InputPopupModel> for InputPopup<'a, 'a> {
+    fn from(value: &'a InputPopupModel) -> Self {
+        Self::from(value.input.input_widget()).with_submit(value.submit)
+    }
+}
 
 pub enum Popup {
-    // NewBackup(InputPopup),
-    NewBkp { choice: BinaryChoice },
-    DeleteBkp { choice: BinaryChoice },
+    NewBackup(InputPopupModel),
+    DeleteBkp(BinaryChoice),
     // RenameBackup(InputPopup),
     // LoadBackup(BinaryChoice),
     // DeleteBackup(BinaryChoice),

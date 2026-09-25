@@ -3,6 +3,7 @@ mod conf;
 mod input;
 mod manage_focus;
 mod my_widgets;
+mod popup_models;
 mod render;
 
 use crate::{

@@ -12,9 +12,9 @@ pub struct InputModel {
     pub input: InputState,
 }
 
-impl<'a> From<&'a InputModel> for InputPopup<'a, 'a> {
-    fn from(value: &'a InputModel) -> Self {
-        Self::from(value.input.input_widget()).with_submit(value.submit)
+impl InputModel {
+    pub fn as_input_popup(&self) -> InputPopup<'_, '_> {
+        InputPopup::from(self.input.as_input_widget()).with_submit(self.submit)
     }
 }
 

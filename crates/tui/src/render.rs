@@ -112,9 +112,10 @@ impl App {
 
             match popup {
                 Popup::NewBackup(input_model) => {
-                    let popup: InputPopup = input_model.into();
                     frame.render_widget(
-                        popup.with_question_line(Line::raw("create a new backup?").centered()),
+                        input_model
+                            .as_input_popup()
+                            .with_question_line(Line::raw("create a new backup?").centered()),
                         center_area,
                     );
                 }

@@ -157,14 +157,6 @@ impl<'line> Input<'line> {
         }
     }
 
-    pub const fn with_placeholder(mut self, s: &'line str) -> Self {
-        if self.s.is_empty() {
-            self.s = s;
-        }
-
-        self
-    }
-
     pub const fn with_cursor_index(mut self, cursor_index: usize) -> Self {
         self.cursor_index = Some(cursor_index);
         self

@@ -175,6 +175,8 @@ impl App {
                             } else {
                                 Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
                             };
+
+                            self.focus = Focus::ExplorerList;
                         }
 
                         self.popup = None;

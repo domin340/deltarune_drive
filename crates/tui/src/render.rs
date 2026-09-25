@@ -113,7 +113,10 @@ impl App {
             match popup {
                 Popup::NewBackup(input_model) => {
                     let popup: InputPopup = input_model.into();
-                    frame.render_widget(popup.with_question("create a new backup?"), center_area);
+                    frame.render_widget(
+                        popup.with_question_line(Line::raw("create a new backup?").centered()),
+                        center_area,
+                    );
                 }
                 Popup::DeleteBackup(choice) => {
                     let selected_bkp_name = self.selected_bkp().name();

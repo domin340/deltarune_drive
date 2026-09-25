@@ -90,7 +90,7 @@ impl StatefulWidget for BinaryChoicePopup<'_> {
 }
 
 pub struct InputPopup<'a, 'line> {
-    question: &'line str,
+    question: Line<'line>,
     input: Input<'a>,
     submit: Option<BinaryChoice>,
 }
@@ -99,7 +99,7 @@ impl<'a> From<Input<'a>> for InputPopup<'a, '_> {
     fn from(input: Input<'a>) -> Self {
         Self {
             input,
-            question: "",
+            question: Line::default(),
             submit: None,
         }
     }
@@ -111,8 +111,8 @@ impl<'a, 'line> InputPopup<'a, 'line> {
         self
     }
 
-    pub const fn with_question(mut self, s: &'line str) -> Self {
-        self.question = s;
+    pub fn with_question_line(mut self, l: Line<'line>) -> Self {
+        self.question = l;
         self
     }
 }
@@ -123,8 +123,7 @@ impl Widget for InputPopup<'_, '_> {
         Self: Sized,
     {
         if let Some(mut submit) = self.submit {
-            let line = Line::raw(self.question);
-            BinaryChoicePopup::new(line).render(area, buf, &mut submit);
+            BinaryChoicePopup::new(self.question).render(area, buf, &mut submit);
         } else {
             let input_area = area.centered_vertically(Constraint::Length(1));
             self.input.render(input_area, buf);

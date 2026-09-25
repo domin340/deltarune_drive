@@ -89,9 +89,9 @@ impl StatefulWidget for BinaryChoicePopup<'_> {
     }
 }
 
-pub struct InputPopup<'a, 'line> {
+pub struct InputPopup<'text, 'line> {
     question: Line<'line>,
-    input: Input<'a>,
+    input: Input<'text>,
     submit: Option<BinaryChoice>,
 }
 
@@ -105,7 +105,7 @@ impl<'a> From<Input<'a>> for InputPopup<'a, '_> {
     }
 }
 
-impl<'a, 'line> InputPopup<'a, 'line> {
+impl<'text, 'line> InputPopup<'text, 'line> {
     pub const fn with_submit(mut self, submit: Option<BinaryChoice>) -> Self {
         self.submit = submit;
         self

@@ -17,6 +17,15 @@ pub enum BinaryChoice {
     No,
 }
 
+impl BinaryChoice {
+    pub const fn as_bool(self) -> bool {
+        match self {
+            BinaryChoice::No => false,
+            BinaryChoice::Yes => true,
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct BinaryChoicePopup<'t> {
     question_line: Line<'t>,

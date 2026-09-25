@@ -1,7 +1,8 @@
 use crate::{
-    app::{App, InputPopupModel, Popup},
+    app::App,
     input::{UiEvent, UiPress},
     my_widgets::popup::BinaryChoice,
+    popup_models::{InputModel, InputModelCommand, Popup, handle_bchoice_ui},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -54,40 +55,6 @@ impl Focus {
     }
 }
 
-pub struct ConfirmedInput(pub bool);
-
-impl ConfirmedInput {
-    pub const fn confirmed_input(self) -> bool {
-        self.0
-    }
-}
-
-fn handle_ui_input_model(model: &mut InputPopupModel, event: UiEvent) -> ConfirmedInput {
-    if let Some(choice) = &mut model.submit {
-        let UiEvent::Press(e) = event else {
-            return ConfirmedInput(false);
-        };
-
-        match BinaryChoiceOutput::parse(*choice, e) {
-            BinaryChoiceOutput::Confirmed(choice) => {
-                if choice == BinaryChoice::Yes {
-                    return ConfirmedInput(true);
-                } else {
-                    // clear the alert popup, go back to input
-                    model.submit = None;
-                }
-            }
-            BinaryChoiceOutput::FocusOnNo => *choice = BinaryChoice::No,
-            BinaryChoiceOutput::FocusOnYes => *choice = BinaryChoice::Yes,
-            BinaryChoiceOutput::None => {}
-        }
-    } else {
-        model.input.handle_action(event);
-    }
-
-    ConfirmedInput(false)
-}
-
 impl App {
     pub fn list_item_idx(&self) -> Option<usize> {
         self.list_item.map(|item| item.idx())
@@ -109,7 +76,7 @@ impl App {
                     Focus::ExplorerList // beginning of the list
                 }
                 UiPress::Enter => {
-                    self.popup = Some(Popup::NewBackup(InputPopupModel::default()));
+                    self.popup = Some(Popup::NewBackup(InputModel::default()));
                     Focus::ExplorerNew
                 }
                 _ => Focus::ExplorerNew,
@@ -168,7 +135,7 @@ impl App {
                 MenuFocus::Delete => match action {
                     UiPress::Up => MenuFocus::Clone,
                     UiPress::Enter => {
-                        self.popup = Some(Popup::DeleteBkp(BinaryChoice::Yes));
+                        self.popup = Some(Popup::DeleteBackup(BinaryChoice::Yes));
                         MenuFocus::Delete
                     }
                     _ => MenuFocus::Delete,
@@ -180,8 +147,9 @@ impl App {
     pub fn handle_ui(&mut self, event: UiEvent) {
         if let Some(popup) = &mut self.popup {
             match popup {
-                Popup::NewBackup(model) => {
-                    if handle_ui_input_model(model, event).confirmed_input() {
+                Popup::NewBackup(model) => match model.handle_ui_event(event) {
+                    InputModelCommand::Close => self.popup = None,
+                    InputModelCommand::ConfirmInput => {
                         let bkp_name = std::mem::take(model.input.buf_mut());
                         let new_list_idx = self.create_registered_bkp(bkp_name);
 
@@ -192,28 +160,24 @@ impl App {
                         // clear the popup, string buffer data is taken.
                         self.popup = None;
                     }
-                }
-                Popup::DeleteBkp(choice) => {
-                    if let UiEvent::Press(action) = event {
-                        match BinaryChoiceOutput::parse(*choice, action) {
-                            BinaryChoiceOutput::Confirmed(choice) => {
-                                if choice == BinaryChoice::Yes {
-                                    let current_list_item = self.list_item.unwrap();
-                                    self.delete_bkp(current_list_item.idx());
+                    InputModelCommand::None => {}
+                },
+                Popup::DeleteBackup(choice) => {
+                    if let UiEvent::Press(press) = event
+                        && let Some(handled_choice) = handle_bchoice_ui(choice, press)
+                    {
+                        if handled_choice.confirmed() {
+                            let current_list_item = self.list_item.unwrap();
+                            self.delete_bkp(current_list_item.idx());
 
-                                    self.list_item = if self.conf.bkps.is_empty() {
-                                        None
-                                    } else {
-                                        Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
-                                    };
-                                }
-
-                                self.popup = None;
-                            }
-                            BinaryChoiceOutput::FocusOnYes => *choice = BinaryChoice::Yes,
-                            BinaryChoiceOutput::FocusOnNo => *choice = BinaryChoice::No,
-                            BinaryChoiceOutput::None => {}
+                            self.list_item = if self.conf.bkps.is_empty() {
+                                None
+                            } else {
+                                Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
+                            };
                         }
+
+                        self.popup = None;
                     }
                 }
             }
@@ -223,26 +187,6 @@ impl App {
 
         if let UiEvent::Press(press) = event {
             self.handle_ui_focus(press);
-        }
-    }
-}
-
-#[derive(Default)]
-enum BinaryChoiceOutput {
-    Confirmed(BinaryChoice),
-    FocusOnYes,
-    FocusOnNo,
-    #[default]
-    None,
-}
-
-impl BinaryChoiceOutput {
-    pub fn parse(choice: BinaryChoice, action: UiPress) -> Self {
-        match action {
-            UiPress::Enter => Self::Confirmed(choice),
-            UiPress::Left => Self::FocusOnYes,
-            UiPress::Right => Self::FocusOnNo,
-            _ => Self::None,
         }
     }
 }

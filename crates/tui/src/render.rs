@@ -5,7 +5,7 @@ use crate::{
     my_widgets::{
         button::{ButtonSimple, ButtonState},
         menu::{Menu, MenuItem, MenuState},
-        popup::{BinaryChoicePopup, InputPopup},
+        popup::BinaryChoicePopup,
     },
     popup_models::Popup,
 };

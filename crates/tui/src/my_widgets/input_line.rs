@@ -50,7 +50,7 @@ impl InputState {
 
     /// Creates [`Input`] renderable widget from state.
     /// Borrows current buffer to share with Input.
-    pub fn input_widget(&self) -> Input<'_> {
+    pub fn as_input_widget(&self) -> Input<'_> {
         Input::new(&self.s).with_cursor_index(self.index)
     }
 

@@ -1,5 +1,5 @@
 use crate::{
-    app::{App, Popup},
+    app::App,
     conf::Bkp,
     manage_focus::Focus,
     my_widgets::{
@@ -7,6 +7,7 @@ use crate::{
         menu::{Menu, MenuItem, MenuState},
         popup::{BinaryChoicePopup, InputPopup},
     },
+    popup_models::Popup,
 };
 use ratatui::{
     Frame,
@@ -19,10 +20,6 @@ use ratatui::{
 impl App {
     pub fn is_focus(&self, focus: Focus) -> bool {
         self.focus == focus
-    }
-
-    pub fn is_editing(&self, focus: Focus) -> bool {
-        self.editing && self.is_focus(focus)
     }
 
     pub fn is_explorer_focused(&self) -> bool {
@@ -118,7 +115,7 @@ impl App {
                     let popup: InputPopup = input_model.into();
                     frame.render_widget(popup.with_question("create a new backup?"), center_area);
                 }
-                Popup::DeleteBkp(choice) => {
+                Popup::DeleteBackup(choice) => {
                     let selected_bkp_name = self.selected_bkp().name();
                     frame.render_stateful_widget(
                         BinaryChoicePopup::new(

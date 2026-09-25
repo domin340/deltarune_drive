@@ -15,6 +15,7 @@ pub enum UiPress {
     Enter,
     Escape,
     Tab,
+    Back,
     Char(char),
 }
 
@@ -33,6 +34,7 @@ impl<'a> UiEvent<'a> {
                     KeyCode::Up => UiPress::Up,
                     KeyCode::Down => UiPress::Down,
                     KeyCode::Enter => UiPress::Enter,
+                    KeyCode::Backspace => UiPress::Back,
                     KeyCode::Esc => UiPress::Escape,
                     KeyCode::Tab => UiPress::Tab,
                     KeyCode::Char(c) => UiPress::Char(c),

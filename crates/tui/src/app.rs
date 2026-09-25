@@ -1,36 +1,12 @@
 use crate::conf::Conf;
 use crate::conf::{Bkp, RegisteredBkp};
 use crate::manage_focus::{ExplorerListItem, Focus};
-use crate::my_widgets::{
-    input_line::InputState,
-    popup::{BinaryChoice, InputPopup},
-};
-
-#[derive(Default)]
-pub struct InputPopupModel {
-    pub submit: Option<BinaryChoice>,
-    pub input: InputState,
-}
-
-impl<'a> From<&'a InputPopupModel> for InputPopup<'a, 'a> {
-    fn from(value: &'a InputPopupModel) -> Self {
-        Self::from(value.input.input_widget()).with_submit(value.submit)
-    }
-}
-
-pub enum Popup {
-    NewBackup(InputPopupModel),
-    DeleteBkp(BinaryChoice),
-    // RenameBackup(InputPopup),
-    // LoadBackup(BinaryChoice),
-    // DeleteBackup(BinaryChoice),
-}
+use crate::popup_models::Popup;
 
 pub struct App {
     /// stores all the backups and handles the IO inside the local data directory.
     pub conf: Conf,
     pub focus: Focus,
-    pub editing: bool,
     pub list_item: Option<ExplorerListItem>,
     pub popup: Option<Popup>,
 }
@@ -46,7 +22,6 @@ impl App {
         Self {
             conf: Conf::default(),
             focus: Focus::default(),
-            editing: false,
             list_item: None,
             popup: None,
         }

@@ -64,8 +64,8 @@ impl App {
         self.conf.bkps().len().saturating_sub(1).into()
     }
 
-    fn handle_ui_focus(&mut self, action: UiPress) {
-        self.focus = match self.focus {
+    fn predict_focus(&mut self, action: UiPress) -> Focus {
+        match self.focus {
             Focus::ExplorerNew => match action {
                 UiPress::Up if !self.bkps_empty() => {
                     self.list_item = Some(self.last_list_item());
@@ -117,31 +117,31 @@ impl App {
                 _ => Focus::ExplorerList,
             },
             Focus::Menu(_) if action == UiPress::Escape => Focus::ExplorerList,
-            Focus::Menu(menu) => Focus::Menu(match menu {
+            Focus::Menu(menu) => match menu {
                 MenuFocus::Rename => match action {
-                    UiPress::Down => MenuFocus::Load,
-                    _ => MenuFocus::Rename,
+                    UiPress::Down => Focus::Menu(MenuFocus::Load),
+                    _ => Focus::Menu(MenuFocus::Rename),
                 },
                 MenuFocus::Load => match action {
-                    UiPress::Down => MenuFocus::Clone,
-                    UiPress::Up => MenuFocus::Rename,
-                    _ => MenuFocus::Load,
+                    UiPress::Down => Focus::Menu(MenuFocus::Clone),
+                    UiPress::Up => Focus::Menu(MenuFocus::Rename),
+                    _ => Focus::Menu(MenuFocus::Load),
                 },
                 MenuFocus::Clone => match action {
-                    UiPress::Down => MenuFocus::Delete,
-                    UiPress::Up => MenuFocus::Load,
-                    _ => MenuFocus::Clone,
+                    UiPress::Down => Focus::Menu(MenuFocus::Delete),
+                    UiPress::Up => Focus::Menu(MenuFocus::Load),
+                    _ => Focus::Menu(MenuFocus::Clone),
                 },
                 MenuFocus::Delete => match action {
-                    UiPress::Up => MenuFocus::Clone,
+                    UiPress::Up => Focus::Menu(MenuFocus::Clone),
                     UiPress::Enter => {
                         self.popup = Some(Popup::DeleteBackup(BinaryChoice::Yes));
-                        MenuFocus::Delete
+                        Focus::ExplorerList
                     }
-                    _ => MenuFocus::Delete,
+                    _ => Focus::Menu(MenuFocus::Delete),
                 },
-            }),
-        };
+            },
+        }
     }
 
     pub fn handle_ui(&mut self, event: UiEvent) {
@@ -187,8 +187,8 @@ impl App {
             return;
         };
 
-        if let UiEvent::Press(press) = event {
-            self.handle_ui_focus(press);
+        if let UiEvent::Press(action) = event {
+            self.focus = self.predict_focus(action);
         }
     }
 }

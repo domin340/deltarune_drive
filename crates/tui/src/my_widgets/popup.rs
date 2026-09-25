@@ -28,21 +28,21 @@ impl BinaryChoice {
 
 #[derive(Default, Debug)]
 pub struct BinaryChoicePopup<'t> {
+    selected: BinaryChoice,
     question_line: Line<'t>,
 }
 
 impl<'t> BinaryChoicePopup<'t> {
-    pub fn new(line: impl Into<Line<'t>>) -> Self {
+    pub fn new(selected: BinaryChoice, line: impl Into<Line<'t>>) -> Self {
         Self {
+            selected,
             question_line: line.into(),
         }
     }
 }
 
-impl StatefulWidget for BinaryChoicePopup<'_> {
-    type State = BinaryChoice;
-
-    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State) {
+impl Widget for BinaryChoicePopup<'_> {
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer) {
         Clear.render(area, buf);
         buf.set_style(area, Style::default().fg(Color::Reset).bg(Color::Blue));
 
@@ -67,7 +67,7 @@ impl StatefulWidget for BinaryChoicePopup<'_> {
         .areas(buttons_area);
 
         let btn_focus_style = Style::default().bg(Color::DarkGray).fg(Color::White);
-        let yes_picked = state == &BinaryChoice::Yes;
+        let yes_picked = self.selected == BinaryChoice::Yes;
 
         ButtonSimple::new(Line::from("yes").centered())
             .focus_style(btn_focus_style)
@@ -122,8 +122,8 @@ impl Widget for InputPopup<'_, '_> {
     where
         Self: Sized,
     {
-        if let Some(mut submit) = self.submit {
-            BinaryChoicePopup::new(self.question).render(area, buf, &mut submit);
+        if let Some(submit) = self.submit {
+            BinaryChoicePopup::new(submit, self.question).render(area, buf);
         } else {
             let input_area = area.centered_vertically(Constraint::Length(1));
             self.input.render(input_area, buf);

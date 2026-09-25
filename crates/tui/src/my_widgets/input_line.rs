@@ -44,10 +44,6 @@ impl InputState {
         &mut self.s
     }
 
-    pub const fn cursor_index(&self) -> usize {
-        self.index
-    }
-
     /// Creates [`Input`] renderable widget from state.
     /// Borrows current buffer to share with Input.
     pub fn as_input_widget(&self) -> Input<'_> {
@@ -60,10 +56,6 @@ impl InputState {
 
     pub const fn is_empty(&self) -> bool {
         self.s.is_empty()
-    }
-
-    pub fn move_to(&mut self, index: usize) {
-        self.index = index.min(self.len())
     }
 
     pub fn paste_on_index(&mut self, s: &str) {
@@ -81,8 +73,8 @@ impl InputState {
         }
 
         self.s.insert_str(self.index, &s);
-        self.index += s.len();
         self.chars_len += s.chars().count();
+        self.index += s.len();
     }
 
     pub fn delete_on_index(&mut self) {
@@ -97,8 +89,8 @@ impl InputState {
             .expect("index > 0 means there is a previous character");
 
         self.s.drain(previous..self.index);
-        self.index = previous;
         self.chars_len -= 1;
+        self.index = previous;
     }
 
     pub fn insert_on_index(&mut self, c: char) {
@@ -107,33 +99,37 @@ impl InputState {
         }
 
         self.s.insert(self.index, c);
-        self.index += c.len_utf8();
         self.chars_len += 1;
+        self.index += c.len_utf8();
+    }
+
+    fn move_back(&mut self) {
+        if self.index > 0 {
+            self.index = self.s[..self.index]
+                .char_indices()
+                .next_back()
+                .map(|(index, _)| index)
+                .unwrap_or(0);
+        }
+    }
+
+    fn move_forward(&mut self) {
+        if self.index < self.s.len() {
+            let next = self.s[self.index..]
+                .chars()
+                .next()
+                .expect("index < len means there is a character");
+
+            self.index += next.len_utf8();
+        }
     }
 
     pub fn handle_event(&mut self, e: UiEvent) {
         match e {
             UiEvent::Paste(s) => self.paste_on_index(s),
             UiEvent::Press(press) => match press {
-                UiPress::Left => {
-                    if self.index > 0 {
-                        self.index = self.s[..self.index]
-                            .char_indices()
-                            .next_back()
-                            .map(|(index, _)| index)
-                            .unwrap_or(0);
-                    }
-                }
-                UiPress::Right => {
-                    if self.index < self.s.len() {
-                        let next = self.s[self.index..]
-                            .chars()
-                            .next()
-                            .expect("index < len means there is a character");
-
-                        self.index += next.len_utf8();
-                    }
-                }
+                UiPress::Left => self.move_back(),
+                UiPress::Right => self.move_forward(),
                 UiPress::Back => self.delete_on_index(),
                 UiPress::Char(c) => self.insert_on_index(c),
                 _ => {}

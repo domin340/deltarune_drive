@@ -28,18 +28,23 @@ impl From<usize> for ExplorerListIndex {
     }
 }
 
+pub enum CloningAction {
+    Pointing(ExplorerListIndex),
+    New,
+}
+
 #[derive(Default)]
 pub enum ExplorerListItem {
     /// Nothing is selected
     #[default]
     None,
     Cloning {
-        /// The item selected to be cloned.
-        origin: ExplorerListIndex,
+        index: ExplorerListIndex,
+        action: CloningAction,
+        confirmation: Option<BinaryChoice>,
     },
     Renaming {
-        /// The item selected to be renamed
-        item: ExplorerListIndex,
+        index: ExplorerListIndex,
         input_state: InputState,
         confirmation: Option<BinaryChoice>,
     },

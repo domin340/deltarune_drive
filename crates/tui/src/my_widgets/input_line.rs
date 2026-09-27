@@ -1,5 +1,9 @@
 use crate::{UiEvent, input::UiPress};
-use ratatui::{Frame, layout::Rect};
+use ratatui::{
+    layout::Rect,
+    style::{Modifier, Style},
+    widgets::Widget,
+};
 use std::cell::Cell;
 
 #[derive(Debug, Clone, Copy)]
@@ -66,16 +70,6 @@ struct InputIndices {
     scroll_offset: usize,
 }
 
-fn calculate_scroll_offset(cursor: usize, scroll_offset: usize, width: usize) -> usize {
-    if cursor < scroll_offset {
-        cursor
-    } else if cursor >= scroll_offset + width {
-        cursor - width + 1
-    } else {
-        scroll_offset
-    }
-}
-
 impl InputState {
     pub fn new(s: impl Into<String>) -> Self {
         let s = s.into();
@@ -106,8 +100,10 @@ impl InputState {
         });
     }
 
-    pub(crate) const fn buf_mut(&mut self) -> &mut String {
-        &mut self.s
+    /// *Takes* inner buffer and replaces it with empty one returning the original.
+    /// See [`std::mem::take`].
+    pub fn take_buffer(&mut self) -> String {
+        std::mem::take(&mut self.s)
     }
 
     pub const fn len(&self) -> usize {
@@ -234,7 +230,43 @@ impl InputState {
     }
 }
 
-pub fn render_input(input: &InputState, frame: &mut Frame, area: Rect) {}
+impl Widget for &InputState {
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer)
+    where
+        Self: Sized,
+    {
+        if area.width == 0 || area.height == 0 {
+            return;
+        }
+
+        let new_width = area.width as usize;
+        self.update_display_width(new_width);
+
+        let display_state = self.display_state.get();
+        let mut local_cursor_idx = self.cursor - display_state.scroll_offset;
+
+        let scroll_offset = if local_cursor_idx == new_width {
+            // now when width = 10 and cursor is 10 (trailing to insert a new character)
+            // cursor will be still in area for the user.
+            local_cursor_idx -= 1;
+            display_state.scroll_offset.saturating_add(1)
+        } else {
+            display_state.scroll_offset
+        };
+
+        // take buffer character count worth of characters bounded by area width
+        for (c, local_char_offset) in self.s.chars().skip(scroll_offset).zip(0..area.width) {
+            let coord = (area.x.saturating_add(local_char_offset), area.y);
+            buf[coord].set_char(c);
+        }
+
+        if local_cursor_idx < new_width {
+            let cursor_style = Style::default().add_modifier(Modifier::REVERSED);
+            let local_cursor_idx = local_cursor_idx as u16;
+            buf[(area.x + local_cursor_idx, area.y)].set_style(cursor_style);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -242,8 +274,8 @@ mod tests {
 
     /// width = 10
     /// "always say hello to everyone!"
-    ///           ^ cursor/index = 10
-    ///           ^ char offset
+    /// ^          ^ cursor/index = 9
+    /// | char offset
     ///
     ///  <- start
     ///

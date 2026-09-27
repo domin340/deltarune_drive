@@ -100,9 +100,21 @@ impl InputState {
         });
     }
 
+    /// Moves index and cursor to the start of the buffer.
+    pub fn move_start(&mut self) {
+        self.index = 0;
+        self.cursor = 0;
+
+        // with cursor being at the start; scroll offset must also be reset.
+        let display_state = self.display_state.get_mut();
+        display_state.scroll_offset = 0;
+    }
+
     /// *Takes* inner buffer and replaces it with empty one returning the original.
     /// See [`std::mem::take`].
     pub fn take_buffer(&mut self) -> String {
+        self.move_start();
+        self.chars_len = 0;
         std::mem::take(&mut self.s)
     }
 

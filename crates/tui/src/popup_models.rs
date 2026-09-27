@@ -1,21 +1,12 @@
 use crate::{
     input::{UiEvent, UiPress},
-    my_widgets::{
-        input_line::InputState,
-        popup::{BinaryChoice, InputPopup},
-    },
+    my_widgets::{input_line::InputState, popup::BinaryChoice},
 };
 
 #[derive(Default)]
 pub struct InputModel {
     pub submit: Option<BinaryChoice>,
     pub input: InputState,
-}
-
-impl InputModel {
-    pub fn as_input_popup(&self) -> InputPopup<'_, '_> {
-        InputPopup::from(self.input.as_input_widget()).with_submit(self.submit)
-    }
 }
 
 pub enum InputModelCommand {
@@ -74,5 +65,4 @@ pub enum Popup {
     DeleteBackup(BinaryChoice),
     // RenameBackup(InputPopup),
     // LoadBackup(BinaryChoice),
-    // DeleteBackup(BinaryChoice),
 }

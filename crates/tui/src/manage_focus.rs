@@ -1,32 +1,9 @@
 use crate::{
-    app::App,
+    app::{App, ExplorerListItem},
     input::{UiEvent, UiPress},
     my_widgets::popup::BinaryChoice,
     popup_models::{InputModel, InputModelCommand, Popup, handle_bchoice_ui},
 };
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ExplorerListItem(pub usize);
-
-impl ExplorerListItem {
-    pub fn idx(self) -> usize {
-        self.0
-    }
-
-    pub fn next(self) -> ExplorerListItem {
-        self.idx().saturating_add(1).into()
-    }
-
-    pub fn prev(self) -> ExplorerListItem {
-        self.idx().saturating_sub(1).into()
-    }
-}
-
-impl From<usize> for ExplorerListItem {
-    fn from(value: usize) -> Self {
-        Self(value)
-    }
-}
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MenuFocus {
@@ -56,23 +33,16 @@ impl Focus {
 }
 
 impl App {
-    pub fn list_item_idx(&self) -> Option<usize> {
-        self.list_item.map(|item| item.idx())
-    }
-
-    fn last_list_item(&self) -> ExplorerListItem {
-        self.conf.bkps().len().saturating_sub(1).into()
-    }
-
     fn predict_focus(&mut self, action: UiPress) -> Focus {
         match self.focus {
             Focus::ExplorerNew => match action {
                 UiPress::Up if !self.bkps_empty() => {
-                    self.list_item = Some(self.last_list_item());
+                    let last_index = self.last_explorer_list_index();
+                    self.list_item = ExplorerListItem::Index(last_index);
                     Focus::ExplorerList // item above the new button
                 }
                 UiPress::Tab | UiPress::Down if !self.bkps_empty() => {
-                    self.list_item = Some(0.into());
+                    self.list_item = ExplorerListItem::Index(0.into());
                     Focus::ExplorerList // beginning of the list
                 }
                 UiPress::Enter => {
@@ -82,36 +52,40 @@ impl App {
                 _ => Focus::ExplorerNew,
             },
             Focus::ExplorerList => match action {
-                UiPress::Up => {
-                    if let Some(item) = self.list_item {
-                        if item.idx() == 0 {
-                            self.list_item = None;
+                UiPress::Up => match self.list_item {
+                    ExplorerListItem::Index(index) => {
+                        if index.unwrap() == 0 {
+                            self.list_item = ExplorerListItem::None;
                             Focus::ExplorerNew
                         } else {
-                            self.list_item = Some(item.prev());
+                            self.list_item = ExplorerListItem::Index(index.prev());
                             Focus::ExplorerList
                         }
-                    } else {
-                        Focus::ExplorerNew
                     }
-                }
+                    ExplorerListItem::None => Focus::ExplorerNew,
+                    _ => todo!(),
+                },
                 UiPress::Enter => Focus::Menu(MenuFocus::default()),
                 UiPress::Down => {
-                    if let Some(item) = self.list_item {
-                        let last_idx = self.last_list_item().idx();
-                        if item.idx() == last_idx {
-                            self.list_item = None;
-                            Focus::ExplorerNew
-                        } else {
-                            self.list_item = Some(item.next().min(last_idx.into()));
-                            Focus::ExplorerList
+                    match self.list_item {
+                        ExplorerListItem::Index(index) => {
+                            let last_index = self.last_explorer_list_index().unwrap();
+                            if index.unwrap() == last_index {
+                                self.list_item = ExplorerListItem::None;
+                                Focus::ExplorerNew
+                            } else {
+                                let new_index = index.next().min(last_index.into());
+                                self.list_item = ExplorerListItem::Index(new_index);
+                                Focus::ExplorerList
+                            }
                         }
-                    } else {
-                        Focus::ExplorerNew
+                        // explorer is empty edge case
+                        ExplorerListItem::None => Focus::ExplorerNew,
+                        _ => todo!(),
                     }
                 }
                 UiPress::Tab => {
-                    self.list_item = None;
+                    self.list_item = ExplorerListItem::None;
                     Focus::ExplorerNew
                 }
                 _ => Focus::ExplorerList,
@@ -151,10 +125,10 @@ impl App {
                     InputModelCommand::Close => self.popup = None,
                     InputModelCommand::ConfirmInput => {
                         let bkp_name = model.input.take_buffer();
-                        let new_list_idx = self.create_registered_bkp(bkp_name);
+                        let new_list_index = self.create_registered_bkp(bkp_name);
 
                         // switch focus to the new backup page
-                        self.list_item = Some(new_list_idx.into());
+                        self.list_item = ExplorerListItem::Index(new_list_index.into());
                         self.focus = Focus::ExplorerList;
 
                         // clear the popup, string buffer data is taken.
@@ -167,13 +141,18 @@ impl App {
                         && let Some(handled_choice) = handle_bchoice_ui(choice, press)
                     {
                         if handled_choice.confirmed() {
-                            let current_list_item = self.list_item.unwrap();
-                            self.delete_bkp(current_list_item.idx());
+                            let ExplorerListItem::Index(index) = self.list_item else {
+                                panic!("expected ExplorerListIndex when menu is open");
+                            };
+
+                            self.delete_bkp(index.unwrap());
 
                             self.list_item = if self.conf.bkps.is_empty() {
-                                None
+                                ExplorerListItem::None
                             } else {
-                                Some(current_list_item.min(self.last_list_item())) // move back by 1 bkp
+                                // move back by 1 bkp
+                                let last_index = self.last_explorer_list_index();
+                                ExplorerListItem::Index(index.min(last_index))
                             };
 
                             self.focus = Focus::ExplorerList;

@@ -1,5 +1,5 @@
 use crate::{
-    app::App,
+    app::{App, ExplorerListItem},
     conf::Bkp,
     manage_focus::Focus,
     my_widgets::{
@@ -62,7 +62,13 @@ impl App {
             &mut ButtonState::default().set_focused(self.is_focus(Focus::ExplorerNew)),
         );
 
-        let mut bkps_list_state = ListState::default().with_selected(self.list_item_idx());
+        let selected_explorer_index: Option<usize> = match self.list_item {
+            ExplorerListItem::Index(index) => Some(index.unwrap()),
+            ExplorerListItem::None => None,
+            _ => todo!(),
+        };
+        let mut bkps_list_state = ListState::default().with_selected(selected_explorer_index);
+
         frame.render_stateful_widget(
             List::new(self.bkp_names())
                 .highlight_style(Style::default().bg(Color::DarkGray).fg(Color::White)),
@@ -71,18 +77,21 @@ impl App {
         );
 
         if let Some(selected_menu_option) = self.focus.as_menu_index() {
+            let ExplorerListItem::Index(selected_index) = self.list_item else {
+                panic!("xpected ExplorerListIndex when menu is open");
+            };
+
+            let selected_index_y_offset = selected_index
+                .unwrap()
+                .saturating_sub(bkps_list_state.offset())
+                as u16;
+
             const MENU_WIDTH: u16 = 20;
             const MENU_HEIGHT: u16 = 4;
             const MENU_OFFSET_Y: u16 = 1;
 
-            let selected_item = self
-                .list_item
-                .unwrap()
-                .idx()
-                .saturating_sub(bkps_list_state.offset());
-
             let item_x = explorer_list_area.x;
-            let item_y = explorer_list_area.y + selected_item as u16 + MENU_OFFSET_Y;
+            let item_y = explorer_list_area.y + selected_index_y_offset + MENU_OFFSET_Y;
 
             let screen = frame.area();
             let (x, y) = fit_on_screen(item_x, item_y, MENU_WIDTH, MENU_HEIGHT, screen);
@@ -112,16 +121,16 @@ impl App {
 
             match popup {
                 Popup::NewBackup(input_model) => {
-                    frame.render_widget(
-                        input_model
-                            .as_input_popup()
-                            .with_question_line(Line::raw("create a new backup?").centered()),
-                        center_area,
-                    );
+                    frame.render_widget(&input_model.input, center_area);
                 }
                 Popup::DeleteBackup(choice) => {
                     let choice = choice.clone();
-                    let selected_bkp_name = self.selected_bkp().name();
+
+                    let selected_bkp_name = {
+                        let explorer_index = self.list_item.as_index().unwrap();
+                        self.get_bkp(explorer_index.unwrap()).unwrap().name()
+                    };
+
                     frame.render_widget(
                         BinaryChoicePopup::new(
                             choice,
@@ -136,14 +145,6 @@ impl App {
                 }
             }
         }
-    }
-
-    pub fn get_bkp(&self, idx: usize) -> Option<&Bkp> {
-        self.conf.bkps.get(idx)
-    }
-
-    pub fn selected_bkp(&self) -> &Bkp {
-        self.get_bkp(self.list_item.unwrap().idx()).unwrap()
     }
 
     fn bkp_names(&self) -> impl Iterator<Item = &str> {

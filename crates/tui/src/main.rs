@@ -7,7 +7,7 @@ mod popup_models;
 mod render;
 
 use crate::{
-    app::App,
+    app::{App, ExplorerListItem},
     conf::{Conf, extend_bkps_with_fakes},
     input::UiEvent,
     manage_focus::Focus,
@@ -63,10 +63,10 @@ fn create_app() -> App {
     let mut app = App::from_conf(conf);
 
     if app.bkps_empty() {
-        app.list_item = None;
+        app.list_item = ExplorerListItem::None;
         app.focus = Focus::ExplorerNew
     } else {
-        app.list_item = Some(0.into());
+        app.list_item = ExplorerListItem::Index(0.into());
         app.focus = Focus::ExplorerList
     };
 

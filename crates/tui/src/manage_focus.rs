@@ -150,7 +150,7 @@ impl App {
                 Popup::NewBackup(model) => match model.handle_ui_event(event) {
                     InputModelCommand::Close => self.popup = None,
                     InputModelCommand::ConfirmInput => {
-                        let bkp_name = std::mem::take(model.input.buf_mut());
+                        let bkp_name = model.input.take_buffer();
                         let new_list_idx = self.create_registered_bkp(bkp_name);
 
                         // switch focus to the new backup page
